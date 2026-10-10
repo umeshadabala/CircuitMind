@@ -1,0 +1,18 @@
+# Environments
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# Node
+frontend/node_modules/
+frontend/dist/
+
+# SQLite data
+data/circuitmind.db*
+*.sqlite
+*.db
+
+# System & OS
+.DS_Store
+*.log
