@@ -46,7 +46,8 @@ def health_check():
         "app": settings.app_name,
         "version": settings.version,
         "tagline": settings.tagline,
-        "ai_mode": "Local Engineering Engine (Deterministic & Fast)",
+        "ai_mode": f"Ollama ({settings.ollama_model})",
+        "llm_model": settings.ollama_model,
         "dmai_memory": "active"
     }
 
@@ -286,11 +287,20 @@ def ask_dmai_endpoint(project_id: str, req: DmaiAskRequest):
         raise HTTPException(status_code=404, detail="Project not found")
     proj = Project(**data)
     
-    q_lower = req.question.lower()
-    
-    # 1. Inspect project entities and history directly
     events = query_memory(project_id)
     
+    # 1. Primary: Query Ollama with gpt-oss:120b-cloud model
+    from backend.app.engine.llm import ask_engineering_llm
+    llm_answer = ask_engineering_llm(data, req.question)
+    if llm_answer:
+        return {
+            "answer": llm_answer,
+            "source": f"Ollama ({settings.ollama_model})",
+            "relevant_events": events[:3]
+        }
+
+    # 2. Fallback to deterministic model if Ollama is unavailable
+    q_lower = req.question.lower()
     if "oled" in q_lower or "gpio21" in q_lower or "gpio22" in q_lower:
         return {
             "answer": "The ESP32 default hardware I2C peripheral is assigned to GPIO21 (SDA) and GPIO22 (SCL). Connecting the SSD1306 OLED to these pins enables high-speed hardware bus communication (up to 400kHz) without software bit-banging overhead.",
@@ -304,7 +314,6 @@ def ask_dmai_endpoint(project_id: str, req: DmaiAskRequest):
             "relevant_events": [e for e in events if "buzzer" in e.get("summary", "").lower()][:3]
         }
     elif "threshold" in q_lower or "20" in q_lower or "50" in q_lower:
-        # Check current threshold
         threshold_val = 20.0
         for r in proj.requirements:
             if "50" in r.description:

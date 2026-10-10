@@ -29,6 +29,23 @@ export const Navbar: React.FC<NavbarProps> = ({ project, onSimulate, onNewProjec
             <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>({project.board.display_name})</span>
           </div>
 
+          {/* LLM Model Indicator */}
+          <div style={{
+            fontSize: '11px',
+            background: 'rgba(56, 189, 248, 0.1)',
+            color: '#38bdf8',
+            border: '1px solid rgba(56, 189, 248, 0.3)',
+            padding: '2px 8px',
+            borderRadius: '4px',
+            fontFamily: 'var(--font-mono)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '5px'
+          }}>
+            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#38bdf8' }} />
+            <span>Ollama: gpt-oss:120b-cloud</span>
+          </div>
+
           {/* Validation Status */}
           <div className={`status-pill ${project.validation?.status || 'draft'}`}>
             {project.validation?.status === 'validated' && <CheckCircle size={12} />}

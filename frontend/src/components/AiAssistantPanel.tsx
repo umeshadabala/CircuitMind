@@ -77,8 +77,8 @@ export const AiAssistantPanel: React.FC<AiAssistantPanelProps> = ({
           <Sparkles size={16} color="var(--accent-orange)" />
           <span>AI Engineering Copilot</span>
         </div>
-        <span style={{ fontSize: '10px', background: 'rgba(255,255,255,0.06)', padding: '2px 6px', borderRadius: '4px', color: 'var(--text-muted)' }}>
-          State-Aware
+        <span style={{ fontSize: '10px', background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', padding: '2px 6px', borderRadius: '4px', fontFamily: 'var(--font-mono)' }}>
+          gpt-oss:120b-cloud
         </span>
       </div>
 
