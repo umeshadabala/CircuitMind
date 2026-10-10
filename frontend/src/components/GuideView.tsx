@@ -1,6 +1,6 @@
 import React from 'react';
 import { Project } from '../types';
-import { BookOpen, AlertTriangle, CheckCircle, Wrench, ShieldAlert } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Wrench, ShieldAlert } from 'lucide-react';
 
 interface GuideViewProps {
   project: Project;
@@ -18,7 +18,7 @@ export const GuideView: React.FC<GuideViewProps> = ({ project }) => {
   }
 
   return (
-    <div style={{ maxWidth: '900px', margin: '0 auto' }}>
+    <div className="view-container">
       <div style={{ marginBottom: '24px' }}>
         <h2 style={{ fontSize: '22px', fontWeight: 700, color: '#fff', marginBottom: '6px' }}>{guide.title}</h2>
         <p style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>{guide.summary}</p>

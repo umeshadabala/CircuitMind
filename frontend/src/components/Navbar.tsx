@@ -1,5 +1,15 @@
 import React from 'react';
-import { Cpu, Download, Play, RefreshCw, AlertTriangle, CheckCircle, Flame } from 'lucide-react';
+import { 
+  Download, 
+  Play, 
+  RefreshCw, 
+  AlertTriangle, 
+  CheckCircle, 
+  Menu, 
+  Sparkles,
+  LayoutDashboard,
+  Plus
+} from 'lucide-react';
 import { Project } from '../types';
 import { getExportBundleUrl } from '../api/client';
 
@@ -7,82 +17,132 @@ interface NavbarProps {
   project: Project | null;
   onSimulate: () => void;
   onNewProject: () => void;
+  onOpenDashboard: () => void;
   simulating: boolean;
+  onToggleSidebar?: () => void;
+  onToggleCopilot?: () => void;
+  isCopilotOpen?: boolean;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ project, onSimulate, onNewProject, simulating }) => {
+export const Navbar: React.FC<NavbarProps> = ({ 
+  project, 
+  onSimulate, 
+  onNewProject,
+  onOpenDashboard,
+  simulating,
+  onToggleSidebar,
+  onToggleCopilot,
+  isCopilotOpen = true
+}) => {
   return (
     <header className="topbar">
+      {/* Brand Section */}
       <div className="brand-section">
-        <div className="brand-logo" onClick={onNewProject} style={{ cursor: 'pointer' }}>
-          <Cpu className="logo-icon" size={20} />
+
+        <div 
+          className="brand-logo" 
+          onClick={onOpenDashboard} 
+          title="CircuitMind Studio Dashboard" 
+          style={{ cursor: 'pointer' }}
+        >
+          <img 
+            src="/logo.svg" 
+            alt="CircuitMind Studio" 
+            style={{ width: '26px', height: '26px', borderRadius: '6px' }} 
+          />
           <span>CircuitMind</span>
         </div>
-        <span className="brand-tagline">Think it. Build it. Prove it.</span>
+        <span className="brand-tagline">Studio</span>
       </div>
 
+      {/* Center Context & Badges (Workspace Context) */}
       {project && (
         <div className="topbar-center">
-          <div className="project-title-badge">
-            <span>{project.title}</span>
+          {/* Clickable project selector / title */}
+          <div 
+            className="project-title-badge" 
+            onClick={onOpenDashboard}
+            title="Switch project on Dashboard"
+            style={{ cursor: 'pointer' }}
+          >
+            <span style={{ fontWeight: 600 }}>{project.title}</span>
             <span className="version-chip">v{project.version}</span>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>({project.board.display_name})</span>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+              ({project.board.type === 'esp32-devkit-v1' ? 'ESP32' : project.board.type === 'raspberry-pi-pico' ? 'RP2040' : 'Uno'})
+            </span>
           </div>
 
-          {/* LLM Model Indicator */}
-          <div style={{
-            fontSize: '11px',
-            background: 'rgba(56, 189, 248, 0.1)',
-            color: '#38bdf8',
-            border: '1px solid rgba(56, 189, 248, 0.3)',
-            padding: '2px 8px',
-            borderRadius: '4px',
-            fontFamily: 'var(--font-mono)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '5px'
-          }}>
-            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#38bdf8' }} />
-            <span>Ollama: gpt-oss:120b-cloud</span>
-          </div>
-
-          {/* Validation Status */}
-          <div className={`status-pill ${project.validation?.status || 'draft'}`}>
-            {project.validation?.status === 'validated' && <CheckCircle size={12} />}
-            {project.validation?.status === 'warning' && <AlertTriangle size={12} />}
-            {project.validation?.status === 'error' && <AlertTriangle size={12} />}
-            <span>Hardware: {project.validation?.status || 'Draft'}</span>
+          {/* Design Rules / DRC Status */}
+          <div className={`status-pill ${project.validation?.status || 'draft'}`} title="Design Rule Check & Static Electrical Constraints">
+            {project.validation?.status === 'validated' && <CheckCircle size={11} />}
+            {project.validation?.status === 'warning' && <AlertTriangle size={11} />}
+            {project.validation?.status === 'error' && <AlertTriangle size={11} />}
+            <span>DRC: {project.validation?.status === 'validated' ? 'Rules Passed' : project.validation?.status === 'warning' ? 'Warnings' : project.validation?.status === 'error' ? 'Errors' : 'Draft'}</span>
           </div>
 
           {/* Simulation Status */}
-          <div className={`status-pill ${project.sim_status || 'draft'}`}>
-            <span>Sim: {project.sim_status || 'Draft'}</span>
-          </div>
+          {project.sim_status === 'passed' && (
+            <div className="status-pill passed" title="Behavioral Circuit Simulation Verified">
+              <CheckCircle size={11} />
+              <span>Simulation: Passed</span>
+            </div>
+          )}
         </div>
       )}
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      {/* Right Controls & Actions */}
+      <div className="topbar-actions">
         {project && (
           <>
-            <button className="btn btn-primary" onClick={onSimulate} disabled={simulating}>
-              {simulating ? <RefreshCw size={14} className="spin" /> : <Play size={14} />}
-              <span>{simulating ? 'Simulating...' : 'Run Simulation'}</span>
+            <button 
+              className="btn btn-primary" 
+              onClick={onSimulate} 
+              disabled={simulating}
+              title="Run Behavioral Simulation"
+            >
+              {simulating ? <RefreshCw size={13} className="spin" /> : <Play size={13} />}
+              <span>{simulating ? 'Simulating...' : 'Simulate'}</span>
             </button>
 
             <a 
               href={getExportBundleUrl(project.id)} 
               className="btn btn-secondary" 
               download={`circuitmind-${project.id}.zip`}
-              title="Download complete engineering bundle (diagram.json, sketch.ino, tests.json, README)"
+              title="Export complete project ZIP bundle"
             >
-              <Download size={14} />
-              <span>Export ZIP</span>
+              <Download size={13} />
+              <span>Export</span>
             </a>
+
+            {/* Copilot Toggle Button */}
+            <button 
+              className={`btn-icon ${isCopilotOpen ? 'active' : ''}`}
+              onClick={onToggleCopilot}
+              title={isCopilotOpen ? "Hide AI Copilot" : "Show AI Copilot"}
+              style={{ padding: '6px 8px' }}
+            >
+              <Sparkles size={16} />
+            </button>
           </>
         )}
 
-        <button className="btn btn-secondary" onClick={onNewProject}>
-          <span>+ New Project</span>
+        <button 
+          className="btn btn-secondary" 
+          onClick={onOpenDashboard}
+          title="Go to Project Dashboard"
+        >
+          <LayoutDashboard size={13} />
+          <span>Dashboard</span>
+        </button>
+
+        <button 
+          className="btn btn-secondary" 
+          onClick={onNewProject}
+          title="Create New Project"
+          style={{ borderColor: 'var(--accent-orange-glow)', color: 'var(--accent-orange)' }}
+        >
+          <Plus size={13} />
+          <span>New</span>
         </button>
       </div>
     </header>

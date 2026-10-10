@@ -14,6 +14,7 @@ export interface Requirement {
   priority: 'required' | 'recommended' | 'optional';
   category: 'sensing' | 'actuation' | 'control' | 'power' | 'display' | 'connectivity';
   target_value?: string;
+  status?: 'proposed' | 'implemented' | 'unresolved' | 'blocked' | 'verified';
 }
 
 export interface BoardConfig {
@@ -39,8 +40,11 @@ export interface ComponentInstance {
   name: string;
   category: string;
   pins: string[];
-  attributes: Record<string, any>;
+  attributes: Record<string, unknown>;
   description?: string;
+  position_x?: number;
+  position_y?: number;
+  rotation?: number;
 }
 
 export interface Connection {
@@ -70,8 +74,8 @@ export interface TestCase {
   given: string;
   when: string;
   then: string;
-  test_type: 'threshold_trigger' | 'pin_state' | 'serial_telemetry' | 'frequency';
-  parameters?: Record<string, any>;
+  test_type: 'threshold_trigger' | 'pin_state' | 'serial_telemetry' | 'frequency' | 'i2c_telemetry';
+  parameters?: Record<string, unknown>;
 }
 
 export interface DiagnosticIssue {
@@ -109,8 +113,8 @@ export interface BuildGuide {
 
 export interface SimulationObservation {
   timestamp_ms: number;
-  sensor_inputs: Record<string, any>;
-  pin_states: Record<string, any>;
+  sensor_inputs: Record<string, unknown>;
+  pin_states: Record<string, unknown>;
   serial_line?: string;
 }
 
@@ -121,7 +125,7 @@ export interface TestResult {
   status: 'passed' | 'failed' | 'inconclusive' | 'pending';
   expected: string;
   observed: string;
-  evidence: Record<string, any>;
+  evidence: Record<string, unknown>;
   diagnostic?: string;
 }
 
@@ -129,13 +133,86 @@ export interface SimulationRun {
   id: string;
   project_id: string;
   version: number;
+  runner?: string;
   started_at: string;
   completed_at?: string;
-  status: 'pending' | 'running' | 'passed' | 'failed' | 'error';
+  status: 'not_configured' | 'ready' | 'running' | 'passed' | 'failed' | 'error';
+  duration_ms?: number;
+  exit_code?: number;
   serial_logs: string[];
   observations: SimulationObservation[];
   test_results: TestResult[];
+  error_details?: string;
+  setup_instructions?: string[];
   summary: string;
+}
+
+export interface AdapterStatus {
+  cli_installed: boolean;
+  cli_path?: string;
+  token_configured: boolean;
+  ready_for_cli_simulation: boolean;
+  compiler_available?: boolean;
+  toolchain_details?: Record<string, unknown>;
+  setup_instructions: string[];
+  embedding_policy: {
+    embedded_iframe_supported: boolean;
+    reason: string;
+    recommended_workflow: string;
+  };
+}
+
+export interface WokwiHandoff {
+  simulator_name: string;
+  simulator_url: string;
+  target_board: string;
+  target_board_type: string;
+  diagram_json: Record<string, unknown>;
+  firmware_code: string;
+  instructions: string[];
+}
+
+export interface BuildStatus {
+  board: string;
+  board_type: string;
+  toolchain: {
+    has_compiler: boolean;
+    arduino_cli_path?: string;
+    platformio_path?: string;
+    avr_gcc_path?: string;
+    setup_instructions: string[];
+  };
+  lint: {
+    valid: boolean;
+    issues: string[];
+    line_count: number;
+    target_board: string;
+  };
+  ready_to_flash: boolean;
+}
+
+export interface ComponentCatalogItem {
+  part_id: string;
+  canonical_name: string;
+  manufacturer?: string;
+  model?: string;
+  category: string;
+  board_compatibility?: string[];
+  electrical_characteristics: Record<string, unknown>;
+  pins: Array<{
+    pin_name: string;
+    signal_type: string;
+    direction: string;
+    voltage_nominal_v?: number;
+    description: string;
+  }>;
+  datasheet_url: string;
+  source_metadata?: Record<string, unknown>;
+  image_url?: string;
+  image_attribution?: string;
+  wokwi_part_id?: string;
+  firmware_libraries?: string[];
+  known_limitations?: string[];
 }
 
 export interface Project {
@@ -151,8 +228,11 @@ export interface Project {
   firmware: FirmwareArtifact[];
   tests: TestCase[];
   build_guide?: BuildGuide;
+  diagram_layout?: Record<string, unknown>;
   validation: ValidationResult;
-  sim_status: 'draft' | 'ready' | 'running' | 'passed' | 'failed';
+  sim_status: 'draft' | 'not_configured' | 'ready' | 'running' | 'passed' | 'failed' | 'error';
+  generation_metadata?: Record<string, unknown>;
+  unresolved_requirements?: string[];
   version: number;
   created_at: string;
   updated_at: string;
@@ -164,7 +244,7 @@ export interface MemoryEvent {
   event_type: string;
   summary: string;
   rationale?: string;
-  payload: Record<string, any>;
+  payload: Record<string, unknown>;
   related_entity_id?: string;
   project_version: number;
   timestamp: string;
@@ -176,7 +256,17 @@ export interface DebugDiagnosis {
   root_cause: string;
   evidence: string[];
   affected_entities: string[];
-  proposed_patch: Record<string, any>;
+  proposed_patch: Record<string, unknown>;
   patch_diff: string;
   remediation_explanation: string;
+}
+
+export type ToastType = 'success' | 'error' | 'warning' | 'info';
+
+export interface ToastItem {
+  id: string;
+  type: ToastType;
+  title?: string;
+  message: string;
+  duration?: number; // ms
 }

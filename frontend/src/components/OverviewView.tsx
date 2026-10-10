@@ -8,17 +8,16 @@ import {
   CheckCircle2, 
   AlertTriangle, 
   Share2, 
-  Code2, 
   PlayCircle, 
   ShieldCheck, 
   ListChecks,
-  ExternalLink,
-  Zap
+  CheckCircle
 } from 'lucide-react';
+import { getComponentDisplayLabel } from '../utils/componentNaming';
 
 interface OverviewViewProps {
   project: Project;
-  onSelectTab: (tab: any) => void;
+  onSelectTab: (tab: TabType) => void;
   onSimulate: () => void;
 }
 
@@ -28,38 +27,36 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
   onSimulate 
 }) => {
   const issues = project.validation?.issues || [];
-  const errors = issues.filter(i => i.severity === 'error');
-  const warnings = issues.filter(i => i.severity === 'warning');
 
   return (
-    <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+    <div className="view-container">
       {/* Hero Project Card */}
       <div className="card" style={{ padding: '24px', background: 'linear-gradient(135deg, #141419 0%, #1a151b 100%)', borderColor: 'var(--border-subtle)' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-              <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#fff' }}>{project.title}</h2>
+              <h2 style={{ fontSize: '22px', fontWeight: 700, color: '#fff' }}>{project.title}</h2>
               <span className="version-chip">v{project.version}</span>
             </div>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '14px', lineHeight: 1.6, maxWidth: '700px' }}>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '13.5px', lineHeight: 1.6, maxWidth: '720px' }}>
               {project.description}
             </p>
           </div>
 
           <div style={{ display: 'flex', gap: '8px' }}>
             <button className="btn btn-primary" onClick={onSimulate}>
-              <PlayCircle size={16} />
+              <PlayCircle size={15} />
               <span>Simulate</span>
             </button>
             <button className="btn btn-secondary" onClick={() => onSelectTab('wiring')}>
-              <Share2 size={16} />
+              <Share2 size={15} />
               <span>Wiring</span>
             </button>
           </div>
         </div>
 
         {/* Microcontroller spec bar */}
-        <div style={{ display: 'flex', gap: '24px', paddingTop: '16px', borderTop: '1px solid var(--border-subtle)', fontSize: '13px' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', paddingTop: '16px', borderTop: '1px solid var(--border-subtle)', fontSize: '12.5px' }}>
           <div>
             <span style={{ color: 'var(--text-muted)' }}>Target Microcontroller: </span>
             <span style={{ fontWeight: 600, color: '#fff' }}>{project.board.display_name}</span>
@@ -72,21 +69,28 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
             <span style={{ color: 'var(--text-muted)' }}>Logic Voltage: </span>
             <span style={{ fontWeight: 600, color: '#fff' }}>{project.board.voltage_logic}V TTL</span>
           </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ color: 'var(--text-muted)' }}>Simulation Status: </span>
+            <span className={`status-pill ${project.sim_status === 'passed' ? 'passed' : 'ready'}`} style={{ fontSize: '10px', padding: '2px 8px' }}>
+              {project.sim_status === 'passed' && <CheckCircle size={10} />}
+              <span>{project.sim_status === 'passed' ? 'VERIFIED PASSED' : 'STANDBY'}</span>
+            </span>
+          </div>
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: '16px' }}>
+      <div className="overview-grid">
         {/* Left Column: Requirements & Hardware Inventory */}
         <div>
-          {/* Hardware Validation Status */}
+          {/* Design Rules & Electrical Checks */}
           <div className="card">
             <div className="card-title" style={{ justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <ShieldCheck size={18} color="var(--accent-orange)" />
-                <span>Deterministic Hardware Validator</span>
+                <span>Design Rules & Electrical Checks (DRC)</span>
               </div>
               <span className={`status-pill ${project.validation?.status || 'draft'}`}>
-                {project.validation?.status}
+                {project.validation?.status === 'validated' ? 'Rules Passed' : project.validation?.status || 'Draft'}
               </span>
             </div>
 
@@ -126,9 +130,14 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
 
           {/* Requirements Card */}
           <div className="card">
-            <div className="card-title">
-              <ListChecks size={18} color="var(--accent-orange)" />
-              <span>Project Requirements & Target Behaviors</span>
+            <div className="card-title" style={{ justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <ListChecks size={18} color="var(--accent-orange)" />
+                <span>Project Requirements & Target Behaviors</span>
+              </div>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                {project.requirements.length} tracked
+              </span>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {project.requirements.map((req) => (
@@ -140,25 +149,50 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
                     border: '1px solid var(--border-subtle)', 
                     borderRadius: '6px',
                     display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: '10px'
+                    flexDirection: 'column',
+                    gap: '6px'
                   }}
                 >
-                  <span style={{ 
-                    fontFamily: 'var(--font-mono)', 
-                    fontSize: '11px', 
-                    color: 'var(--accent-orange)', 
-                    background: 'var(--accent-orange-soft)', 
-                    padding: '2px 6px', 
-                    borderRadius: '4px' 
-                  }}>
-                    {req.id}
-                  </span>
-                  <div style={{ flex: 1, fontSize: '13px', lineHeight: 1.5 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                    <span style={{ 
+                      fontFamily: 'var(--font-mono)', 
+                      fontSize: '11px', 
+                      color: 'var(--accent-orange)', 
+                      background: 'var(--accent-orange-soft)', 
+                      padding: '2px 6px', 
+                      borderRadius: '4px' 
+                    }}>
+                      {req.id}
+                    </span>
+                    <span className={`status-pill ${req.status === 'implemented' || req.status === 'verified' ? 'validated' : req.status === 'unresolved' ? 'warning' : 'draft'}`} style={{ fontSize: '10px', textTransform: 'capitalize' }}>
+                      {req.status || 'proposed'}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '13px', lineHeight: 1.5, color: '#e2e8f0' }}>
                     {req.description}
                   </div>
                 </div>
               ))}
+
+              {project.unresolved_requirements && project.unresolved_requirements.length > 0 && (
+                <div style={{ 
+                  padding: '10px 12px', 
+                  borderRadius: '6px', 
+                  background: 'var(--status-warning-bg)', 
+                  border: '1px solid rgba(245, 158, 11, 0.3)',
+                  marginTop: '4px'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600, color: 'var(--status-warning)', fontSize: '12px' }}>
+                    <AlertTriangle size={14} />
+                    <span>Unresolved Requirements ({project.unresolved_requirements.length})</span>
+                  </div>
+                  <ul style={{ margin: '6px 0 0 18px', padding: 0, fontSize: '12px', color: '#fef3c7' }}>
+                    {project.unresolved_requirements.map((ur, idx) => (
+                      <li key={idx} style={{ marginTop: '3px' }}>{ur}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -196,7 +230,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
                   }}
                 >
                   <div>
-                    <div style={{ fontWeight: 600, color: '#fff' }}>{comp.name}</div>
+                    <div style={{ fontWeight: 600, color: '#fff' }}>{getComponentDisplayLabel(comp.id, project)}</div>
                     <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>part_id: {comp.part_id}</div>
                   </div>
                   <span style={{ 
@@ -222,7 +256,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
               </div>
               <button 
                 className="btn btn-secondary" 
-                onClick={() => onSelectTab('verification')} 
+                onClick={() => onSelectTab('simulation')} 
                 style={{ padding: '3px 8px', fontSize: '11px' }}
               >
                 Inspect
@@ -230,22 +264,28 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {project.tests.map((tc) => (
-                <div 
-                  key={tc.id}
-                  style={{ 
-                    padding: '8px 10px', 
-                    background: 'rgba(255, 255, 255, 0.02)', 
-                    borderRadius: '6px',
-                    fontSize: '12px'
-                  }}
-                >
-                  <div style={{ fontWeight: 600, color: '#fff', marginBottom: '2px' }}>{tc.name}</div>
-                  <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
-                    Expectation: {tc.then}
-                  </div>
+              {project.tests.length === 0 ? (
+                <div style={{ padding: '16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
+                  No automated test assertions configured yet.
                 </div>
-              ))}
+              ) : (
+                project.tests.map((tc) => (
+                  <div 
+                    key={tc.id}
+                    style={{ 
+                      padding: '8px 10px', 
+                      background: 'rgba(255, 255, 255, 0.02)', 
+                      borderRadius: '6px',
+                      fontSize: '12px'
+                    }}
+                  >
+                    <div style={{ fontWeight: 600, color: '#fff', marginBottom: '2px' }}>{tc.name}</div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                      Expectation: {tc.then}
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>

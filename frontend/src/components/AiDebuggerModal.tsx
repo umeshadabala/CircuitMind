@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Project, DebugDiagnosis } from '../types';
-import { Bug, Wrench, CheckCircle2, ArrowRight, ShieldCheck, X } from 'lucide-react';
+import { Bug, Wrench, ArrowRight, X } from 'lucide-react';
 
 interface AiDebuggerModalProps {
   project: Project;
@@ -68,7 +68,7 @@ export const AiDebuggerModal: React.FC<AiDebuggerModalProps> = ({
                 AI Engineering Debugger & Root Cause Analysis
               </div>
               <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                Evidence-Based Hardware/Firmware Diagnostics
+                {project.title} (v{project.version}) • Hardware/Firmware Diagnostics
               </div>
             </div>
           </div>

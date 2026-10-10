@@ -43,13 +43,13 @@ def validate_project_hardware(project: Project) -> ValidationResult:
     for pin_assign in project.pin_assignments:
         b_pin = pin_assign.board_pin
         # Check if pin exists on board
-        if b_pin not in board_pins_set and b_pin not in ["3V3", "5V", "GND", "VIN"]:
+        if b_pin not in board_pins_set:
             issues.append(DiagnosticIssue(
                 severity="error",
                 code="INVALID_BOARD_PIN",
                 message=f"Pin '{b_pin}' assigned to {pin_assign.component_id} does not exist on {board_def['display_name']}.",
                 affected_entities=[pin_assign.component_id, b_pin],
-                remediation=f"Assign to a valid pin on {board_def['display_name']}."
+                remediation=f"Assign to a valid pin on {board_def['display_name']} (valid pins: {', '.join(board_pins_set)})."
             ))
         
         # Check reserved pins
@@ -91,11 +91,26 @@ def validate_project_hardware(project: Project) -> ValidationResult:
 
     # 3. Check connection endpoint validity and required power/ground
     connected_pins: Dict[str, Set[str]] = {}
+    seen_connections: Set[str] = set()
+
     for conn in project.connections:
+        # Check for duplicate connections
+        conn_signature = f"{conn.from_component}:{conn.from_pin} <-> {conn.to_component}:{conn.to_pin}"
+        conn_signature_rev = f"{conn.to_component}:{conn.to_pin} <-> {conn.from_component}:{conn.from_pin}"
+        if conn_signature in seen_connections or conn_signature_rev in seen_connections:
+            issues.append(DiagnosticIssue(
+                severity="warning",
+                code="DUPLICATE_CONNECTION",
+                message=f"Duplicate connection detected between {conn.from_component}:{conn.from_pin} and {conn.to_component}:{conn.to_pin}.",
+                affected_entities=[conn.id, conn.from_component, conn.to_component],
+                remediation="Remove redundant wire to keep the schematic clean."
+            ))
+        seen_connections.add(conn_signature)
+
         connected_pins.setdefault(conn.from_component, set()).add(conn.from_pin)
         connected_pins.setdefault(conn.to_component, set()).add(conn.to_pin)
         
-        # Validate existence
+        # Validate existence of components
         if conn.from_component != "board" and conn.from_component not in component_map:
             issues.append(DiagnosticIssue(
                 severity="error",
@@ -110,6 +125,46 @@ def validate_project_hardware(project: Project) -> ValidationResult:
                 message=f"Connection '{conn.id}' targets non-existent component '{conn.to_component}'.",
                 affected_entities=[conn.id, conn.to_component]
             ))
+
+        # Validate board pins used in connections
+        if conn.from_component == "board" and conn.from_pin not in board_pins_set:
+            issues.append(DiagnosticIssue(
+                severity="error",
+                code="INVALID_BOARD_PIN",
+                message=f"Connection '{conn.id}' references non-existent pin '{conn.from_pin}' on board {board_def['display_name']}.",
+                affected_entities=[conn.id, conn.from_pin],
+                remediation=f"Wire to a valid board pin on {board_def['display_name']}."
+            ))
+        if conn.to_component == "board" and conn.to_pin not in board_pins_set:
+            issues.append(DiagnosticIssue(
+                severity="error",
+                code="INVALID_BOARD_PIN",
+                message=f"Connection '{conn.id}' references non-existent pin '{conn.to_pin}' on board {board_def['display_name']}.",
+                affected_entities=[conn.id, conn.to_pin],
+                remediation=f"Wire to a valid board pin on {board_def['display_name']}."
+            ))
+
+        # Validate component pins used in connections
+        if conn.from_component in component_map:
+            src_part = component_map[conn.from_component].part_id
+            src_cat = COMPONENTS_CATALOG.get(src_part)
+            if src_cat and conn.from_pin not in src_cat.get("pins", {}):
+                issues.append(DiagnosticIssue(
+                    severity="error",
+                    code="INVALID_COMPONENT_PIN",
+                    message=f"Connection '{conn.id}' references invalid pin '{conn.from_pin}' on component '{conn.from_component}' ({src_cat['display_name']}).",
+                    affected_entities=[conn.id, conn.from_component, conn.from_pin]
+                ))
+        if conn.to_component in component_map:
+            dst_part = component_map[conn.to_component].part_id
+            dst_cat = COMPONENTS_CATALOG.get(dst_part)
+            if dst_cat and conn.to_pin not in dst_cat.get("pins", {}):
+                issues.append(DiagnosticIssue(
+                    severity="error",
+                    code="INVALID_COMPONENT_PIN",
+                    message=f"Connection '{conn.id}' references invalid pin '{conn.to_pin}' on component '{conn.to_component}' ({dst_cat['display_name']}).",
+                    affected_entities=[conn.id, conn.to_component, conn.to_pin]
+                ))
 
     # 4. Check component-level missing required connections
     has_led = False
@@ -144,7 +199,28 @@ def validate_project_hardware(project: Project) -> ValidationResult:
             remediation="Add a 220Ω resistor between the GPIO output and LED anode."
         ))
 
-    # Determine status
+    # Check for empty components
+    if not project.components:
+        issues.append(DiagnosticIssue(
+            severity="error",
+            code="NO_COMPONENTS",
+            message="Project has no peripheral components configured.",
+            affected_entities=["components"],
+            remediation="Add required sensors or actuators."
+        ))
+
+    # Check for unresolved requirements
+    unresolved_count = len(project.unresolved_requirements or []) + len([r for r in project.requirements if r.status == "unresolved"])
+    if unresolved_count > 0:
+        issues.append(DiagnosticIssue(
+            severity="warning",
+            code="UNRESOLVED_REQUIREMENTS",
+            message=f"{unresolved_count} user requirement(s) are unresolved or unmapped in the catalog.",
+            affected_entities=["requirements"],
+            remediation="Check catalog coverage or refine the requirement."
+        ))
+
+    # Determine status: "error", "warning", or "validated" (rules verified)
     has_errors = any(i.severity == "error" for i in issues)
     has_warnings = any(i.severity == "warning" for i in issues)
     

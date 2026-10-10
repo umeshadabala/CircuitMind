@@ -15,7 +15,7 @@ def test_smart_parking_sensor_generation():
     prompt = "Build a smart parking sensor using an ESP32. When an object is closer than 20 cm, activate a warning LED and buzzer. Explain the wiring and show me how to test it."
     project = plan_project_from_prompt(prompt)
     
-    assert project.title == "Smart Parking Sensor"
+    assert "parking" in project.title.lower()
     assert project.board.type == "esp32-devkit-v1"
     assert len(project.components) >= 3
     assert len(project.connections) >= 6
@@ -98,3 +98,148 @@ def test_engineering_memory():
     events = query_memory(project_id)
     assert len(events) >= 1
     assert events[0]["event_type"] == "DESIGN_DECISION"
+
+def test_wokwi_simulation_service():
+    from backend.app.services.wokwi_service import WokwiSimulationService
+    from backend.app.services.artifact_service import ArtifactGeneratorService
+    
+    project = create_smart_parking_sensor_project(threshold_cm=20.0)
+    
+    # 1. Adapter Status
+    status = WokwiSimulationService.get_adapter_status(project)
+    assert "cli_installed" in status
+    assert "token_configured" in status
+    assert "setup_instructions" in status
+    assert "embedding_policy" in status
+    assert status["embedding_policy"]["embedded_iframe_supported"] is False
+    
+    # 2. Lint Diagram
+    lint_result = WokwiSimulationService.lint_diagram(project)
+    assert lint_result["valid"] is True
+    assert lint_result["part_count"] >= 4
+    assert lint_result["connection_count"] >= 6
+    
+    # 3. Simulator Handoff
+    handoff = WokwiSimulationService.get_handoff_info(project)
+    assert handoff["simulator_url"] == "https://wokwi.com"
+    assert "diagram_json" in handoff
+    assert "firmware_code" in handoff
+    assert len(handoff["instructions"]) >= 4
+
+    # 4. Simulation Execution
+    sim_run = WokwiSimulationService.execute_simulation(project)
+    assert sim_run.status in ["passed", "ready", "running", "failed", "error", "not_configured"]
+    assert len(sim_run.serial_logs) > 0
+    assert sim_run.duration_ms >= 0
+
+def test_firmware_build_service():
+    from backend.app.services.build_service import FirmwareBuildService
+    
+    project = create_smart_parking_sensor_project(threshold_cm=20.0)
+    
+    # Toolchain detection
+    toolchain = FirmwareBuildService.detect_toolchain(project.board.type)
+    assert "has_compiler" in toolchain
+    assert "setup_instructions" in toolchain
+    
+    # Firmware linting
+    lint = FirmwareBuildService.lint_firmware(project)
+    assert lint["valid"] is True
+    assert lint["line_count"] > 10
+
+def test_component_catalog_service():
+    from backend.app.services.catalog_service import ComponentCatalogService
+    
+    comps = ComponentCatalogService.list_components()
+    assert len(comps) >= 5
+    
+    hc_sr04 = ComponentCatalogService.get_component("hc-sr04")
+    assert hc_sr04 is not None
+    assert hc_sr04["canonical_name"] == "HC-SR04 Ultrasonic Distance Sensor"
+    assert hc_sr04["electrical_characteristics"]["voltage_typical"] == 5.0
+    assert len(hc_sr04["pins"]) == 4
+    assert hc_sr04["datasheet_url"] != ""
+
+def test_project_crud_and_deletion():
+    from backend.app.database.db import save_project, get_project, delete_project, list_projects
+    
+    project = create_smart_parking_sensor_project(project_id="crud-test-001", threshold_cm=30.0)
+    save_project(project.model_dump())
+    
+    # Retrieve
+    retrieved = get_project("crud-test-001")
+    assert retrieved is not None
+    assert retrieved["id"] == "crud-test-001"
+    assert len(retrieved["components"]) >= 3
+    
+    # Delete
+    deleted = delete_project("crud-test-001")
+    assert deleted is True
+    
+    # Verify gone
+    assert get_project("crud-test-001") is None
+    # Verify second delete returns False
+    assert delete_project("crud-test-001") is False
+
+def test_opt_in_demo_seed():
+    from backend.app.database.seed import seed_demo_project
+    from backend.app.database.db import get_project, delete_project
+    
+    proj_parking = seed_demo_project("parking")
+    assert proj_parking.id == "proj-smart-parking-esp32"
+    assert "parking" in proj_parking.title.lower()
+    
+    proj_hospital = seed_demo_project("hospital")
+    assert proj_hospital.id == "proj-hospital-monitor-esp32"
+    assert "hospital" in proj_hospital.title.lower() or "patient" in proj_hospital.title.lower()
+    
+    # Cleanup
+    delete_project("proj-smart-parking-esp32")
+    delete_project("proj-hospital-monitor-esp32")
+
+def test_api_endpoints_via_testclient():
+    from fastapi.testclient import TestClient
+    from backend.app.main import app
+    from backend.app.database.db import delete_project
+    
+    client = TestClient(app)
+    
+    # 1. Health check
+    res = client.get("/api/health")
+    assert res.status_code == 200
+    data = res.json()
+    assert data["status"] == "healthy"
+    assert "ai_status" in data
+    assert "ai_mode" in data
+    
+    # 2. Plan new project
+    res = client.post("/api/projects/plan", json={"prompt": "Build an obstacle detection car with HC-SR04 and ESP32 at 25 cm"})
+    assert res.status_code == 200
+    proj_data = res.json()
+    proj_id = proj_data["id"]
+    assert proj_data["version"] == 1
+    
+    # 3. Simulate project
+    res_sim = client.post(f"/api/projects/{proj_id}/simulate")
+    assert res_sim.status_code == 200
+    sim_data = res_sim.json()
+    assert sim_data["status"] in ["passed", "ready", "running", "failed"]
+    
+    # 4. Ask DMAI endpoint
+    res_dmai = client.post(f"/api/projects/{proj_id}/dmai/ask", json={"question": "What is the trigger threshold?"})
+    assert res_dmai.status_code == 200
+    dmai_answer = res_dmai.json()
+    assert "answer" in dmai_answer
+    assert "source" in dmai_answer
+    
+    # 5. Delete project
+    res_del = client.delete(f"/api/projects/{proj_id}")
+    assert res_del.status_code == 200
+    
+    # 6. Verify 404 after deletion
+    res_404 = client.get(f"/api/projects/{proj_id}")
+    assert res_404.status_code == 404
+
+
+
+

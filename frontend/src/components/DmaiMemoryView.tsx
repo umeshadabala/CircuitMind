@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Project, MemoryEvent } from '../types';
 import { fetchProjectMemory, askDmai } from '../api/client';
-import { Database, Search, MessageSquare, Send, Sparkles, Filter, Clock } from 'lucide-react';
+import { Database, Search, Send, Sparkles, Clock, RefreshCw } from 'lucide-react';
 
 interface DmaiMemoryViewProps {
   project: Project;
@@ -18,7 +18,7 @@ export const DmaiMemoryView: React.FC<DmaiMemoryViewProps> = ({ project }) => {
   const [asking, setAsking] = useState(false);
   const [answer, setAnswer] = useState<{ answer: string; source: string } | null>(null);
 
-  const loadMemory = async () => {
+  const loadMemory = useCallback(async () => {
     try {
       setLoading(true);
       const data = await fetchProjectMemory(project.id, filterType || undefined, searchQuery || undefined);
@@ -28,11 +28,11 @@ export const DmaiMemoryView: React.FC<DmaiMemoryViewProps> = ({ project }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [project.id, filterType, searchQuery]);
 
   useEffect(() => {
     loadMemory();
-  }, [project.id, filterType]);
+  }, [loadMemory]);
 
   const handleAsk = async (q: string) => {
     if (!q.trim()) return;
@@ -55,11 +55,11 @@ export const DmaiMemoryView: React.FC<DmaiMemoryViewProps> = ({ project }) => {
   ];
 
   return (
-    <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+    <div className="view-container">
       <div style={{ marginBottom: '20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Database size={20} color="var(--accent-orange)" />
-          <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#fff' }}>DevMemoryAI Engineering Memory</h2>
+          <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#fff' }}>Project Memory Layer</h2>
         </div>
         <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
           Persistent project events, architectural decisions, and verification history stored in SQLite.
@@ -156,7 +156,12 @@ export const DmaiMemoryView: React.FC<DmaiMemoryViewProps> = ({ project }) => {
 
       {/* Events Timeline Stream */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-        {events.length === 0 ? (
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+            <RefreshCw size={14} className="spin" style={{ animation: 'spin 1s linear infinite' }} />
+            <span>Loading engineering memory events...</span>
+          </div>
+        ) : events.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)', fontSize: '13px' }}>
             No engineering memory events found for this filter.
           </div>

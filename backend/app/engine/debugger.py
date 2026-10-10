@@ -23,13 +23,13 @@ def inject_demo_defect(project: Project, defect_type: str = "misassigned_buzzer_
     if defect_type == "misassigned_buzzer_pin":
         # Disconnect buzzer from GPIO19 and assign to unrouted GPIO4 or wrong pin
         for pa in updated_project.pin_assignments:
-            if pa.component_id == "buzzer" and pa.component_pin in ["2", "SIG"]:
+            if ("buzzer" in pa.component_id.lower()) and pa.component_pin in ["2", "SIG"]:
                 pa.board_pin = "D4"  # Changed to uninitialized pin D4
                 
         for conn in updated_project.connections:
-            if conn.from_component == "buzzer" and conn.from_pin in ["2", "SIG"]:
+            if ("buzzer" in conn.from_component.lower()) and conn.from_pin in ["2", "SIG"]:
                 conn.to_pin = "D4"
-            elif conn.to_component == "buzzer" and conn.to_pin in ["2", "SIG"]:
+            elif ("buzzer" in conn.to_component.lower()) and conn.to_pin in ["2", "SIG"]:
                 conn.from_pin = "D4"
                 
     elif defect_type == "inverted_threshold":
@@ -90,29 +90,30 @@ def analyze_and_diagnose(project: Project, test_results: List[TestResult], valid
     ]
     
     # Check if buzzer is misassigned or wrong pin
-    pin_defs = {f"{pa.component_id}_{pa.component_pin}": pa.board_pin for pa in project.pin_assignments}
-    buzzer_pin = pin_defs.get("buzzer_2", pin_defs.get("buzzer_SIG", ""))
+    buzzer_pa = next((pa for pa in project.pin_assignments if "buzzer" in pa.component_id.lower() and pa.component_pin in ["2", "SIG"]), None)
+    buzzer_pin = buzzer_pa.board_pin if buzzer_pa else ""
+    actual_buzzer_id = buzzer_pa.component_id if buzzer_pa else "buzzer"
     
     if buzzer_pin != "D19" and "buzzer" in failed.observed.lower():
         diff_text = f"""--- a/hardware_config
 +++ b/hardware_config
 @@ -12,3 +12,3 @@
-- buzzer:2 -> board:{buzzer_pin}
-+ buzzer:2 -> board:D19 (Active Piezo PWM Pin)"""
+- {actual_buzzer_id}:2 -> board:{buzzer_pin}
++ {actual_buzzer_id}:2 -> board:D19 (Active Piezo PWM Pin)"""
 
         return DebugDiagnosis(
             title="Acoustic Actuator Pin Misrouting",
             defect_type="pin_misassignment",
             root_cause=f"The piezo buzzer is assigned to {buzzer_pin}, but the firmware and intended routing expect PWM-capable GPIO19 (D19).",
             evidence=evidence_list,
-            affected_entities=["buzzer", "connections", "pin_assignments"],
+            affected_entities=["buzzer", actual_buzzer_id, "connections", "pin_assignments"],
             proposed_patch={
-                "component_id": "buzzer",
-                "component_pin": "2",
+                "component_id": actual_buzzer_id,
+                "component_pin": buzzer_pa.component_pin if buzzer_pa else "2",
                 "corrected_board_pin": "D19"
             },
             patch_diff=diff_text,
-            remediation_explanation="Re-route Buzzer terminal 2 to board pin D19 (GPIO19) and update firmware #define BUZZER_PIN."
+            remediation_explanation=f"Re-route Buzzer terminal {buzzer_pa.component_pin if buzzer_pa else '2'} to board pin D19 (GPIO19) and update firmware #define BUZZER_PIN."
         )
 
     # Generic test failure diagnosis
@@ -141,14 +142,14 @@ def apply_repair_patch(project: Project, diagnosis: DebugDiagnosis) -> Project:
         
         # Update pin assignments
         for pa in repaired.pin_assignments:
-            if pa.component_id == target_comp and pa.component_pin == target_pin:
+            if (pa.component_id == target_comp or "buzzer" in pa.component_id.lower()) and pa.component_pin == target_pin:
                 pa.board_pin = corrected_pin
                 
         # Update connections
         for conn in repaired.connections:
-            if conn.from_component == target_comp and conn.from_pin == target_pin:
+            if (conn.from_component == target_comp or "buzzer" in conn.from_component.lower()) and conn.from_pin == target_pin:
                 conn.to_pin = corrected_pin
-            elif conn.to_component == target_comp and conn.to_pin == target_pin:
+            elif (conn.to_component == target_comp or "buzzer" in conn.to_component.lower()) and conn.to_pin == target_pin:
                 conn.from_pin = corrected_pin
                 
     repaired.version += 1

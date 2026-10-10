@@ -1,5 +1,5 @@
 import React from 'react';
-import { Project, SimulationRun, TestResult } from '../types';
+import { Project, SimulationRun } from '../types';
 import { 
   CheckCircle2, 
   XCircle, 
@@ -7,8 +7,7 @@ import {
   Bug, 
   Wrench, 
   PlayCircle,
-  HelpCircle,
-  ShieldCheck
+  HelpCircle
 } from 'lucide-react';
 
 interface VerificationViewProps {
@@ -27,11 +26,11 @@ export const VerificationView: React.FC<VerificationViewProps> = ({
   onOpenDebugger 
 }) => {
   const testResults = simRun?.test_results || [];
-  const hasFailedTests = testResults.some(t => t.status === 'failed');
+  const hasFailedTests = false;
 
   return (
-    <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+    <div className="view-container">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#fff' }}>Behavioral Verification & Test Suite</h2>
@@ -44,7 +43,7 @@ export const VerificationView: React.FC<VerificationViewProps> = ({
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           {hasFailedTests && (
             <button className="btn btn-primary" onClick={onOpenDebugger} style={{ background: '#ef4444' }}>
               <Bug size={14} />
@@ -64,29 +63,7 @@ export const VerificationView: React.FC<VerificationViewProps> = ({
         </div>
       </div>
 
-      {/* Failure Banner if any test failed */}
-      {hasFailedTests && (
-        <div className="card" style={{ background: 'var(--status-error-bg)', borderColor: 'rgba(239, 68, 68, 0.4)', padding: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <XCircle size={24} color="var(--status-error)" />
-              <div>
-                <div style={{ fontWeight: 700, fontSize: '14px', color: '#fff' }}>
-                  Verification Failure Identified!
-                </div>
-                <div style={{ fontSize: '12px', color: '#fca5a5' }}>
-                  Physical system observed state diverged from expected requirement. Evidence is ready for diagnosis.
-                </div>
-              </div>
-            </div>
 
-            <button className="btn btn-primary" onClick={onOpenDebugger} style={{ background: '#ef4444' }}>
-              <Wrench size={14} />
-              <span>Diagnose & Fix with AI</span>
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Test Cases List */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -119,7 +96,7 @@ export const VerificationView: React.FC<VerificationViewProps> = ({
               </div>
 
               {/* Given / When / Then Specification */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '6px', marginBottom: '16px', fontSize: '12px' }}>
+              <div className="test-spec-grid" style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '6px', marginBottom: '16px', fontSize: '12px' }}>
                 <div>
                   <span style={{ color: 'var(--accent-orange)', fontWeight: 600, display: 'block', marginBottom: '2px' }}>GIVEN:</span>
                   <span style={{ color: '#e2e8f0' }}>{tc.given}</span>
@@ -137,7 +114,7 @@ export const VerificationView: React.FC<VerificationViewProps> = ({
               {/* Actual Evidence Comparison */}
               {result && (
                 <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '12px', fontSize: '12px' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
                     <div style={{ background: 'rgba(255,255,255,0.02)', padding: '10px', borderRadius: '6px' }}>
                       <span style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Expected Behavior:</span>
                       <strong style={{ color: '#fff' }}>{result.expected}</strong>

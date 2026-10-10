@@ -12,7 +12,7 @@
 
 $$\text{Describe} \longrightarrow \text{Design} \longrightarrow \text{Generate} \longrightarrow \text{Simulate} \longrightarrow \text{Test} \longrightarrow \text{Diagnose} \longrightarrow \text{Repair} \longrightarrow \text{Verify} \longrightarrow \text{Remember}$$
 
-CircuitMind acts as a dedicated physical systems IDE rather than a generic code assistant. It enforces deterministic hardware constraints, produces Wokwi-compatible circuit simulations, generates production-quality Arduino C++ firmware, conducts behavioral test verification, and maintains persistent engineering memory backed by SQLite and integrated with **DevMemoryAI (DMAI)**.
+CircuitMind acts as a dedicated physical systems IDE rather than a generic code assistant. It enforces deterministic hardware constraints, produces Wokwi-compatible circuit simulations, generates production-quality Arduino C++ firmware, conducts behavioral test verification, and maintains persistent engineering memory backed by SQLite.
 
 ---
 
