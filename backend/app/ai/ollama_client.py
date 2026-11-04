@@ -25,19 +25,8 @@ class OllamaClient:
 
     def __init__(self, base_url: Optional[str] = None, model: Optional[str] = None):
         self.base_url = (base_url or settings.OLLAMA_BASE_URL).rstrip("/")
-        self._model = model
+        self.model = model or settings.OLLAMA_MODEL
         self.timeout = settings.OLLAMA_TIMEOUT_SECONDS
-
-    @property
-    def model(self) -> str:
-        if self._model is not None:
-            return self._model
-        import os
-        return os.getenv("OLLAMA_MODEL", settings.OLLAMA_MODEL)
-
-    @model.setter
-    def model(self, value: str):
-        self._model = value
 
     async def check_health(self) -> Dict[str, Any]:
         """Checks connection to local Ollama and returns available local models."""

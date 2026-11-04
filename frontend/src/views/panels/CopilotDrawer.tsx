@@ -8,10 +8,11 @@ import {
   Cpu,
   Globe,
   AlertCircle,
+  HelpCircle,
   ShieldCheck,
   RotateCcw,
 } from 'lucide-react';
-import { Project, MetaTrialStatus, AIProvider, HealthResponse } from '../../types';
+import { Project, MetaTrialStatus } from '../../types';
 import { api } from '../../api/client';
 
 interface CopilotDrawerProps {
@@ -20,9 +21,8 @@ interface CopilotDrawerProps {
   onClose: () => void;
   onSendMessage: (
     message: string,
-    provider: AIProvider
+    provider: 'local' | 'meta'
   ) => Promise<{ reply: string; actions_executed: string[]; provider?: string }>;
-  health?: HealthResponse | null;
 }
 
 interface Message {
@@ -38,15 +38,8 @@ export const CopilotDrawer: React.FC<CopilotDrawerProps> = ({
   isOpen,
   onClose,
   onSendMessage,
-  health,
 }) => {
-  const [provider, setProvider] = useState<AIProvider>(health?.active_provider || 'local');
-
-  useEffect(() => {
-    if (health?.active_provider) {
-      setProvider(health.active_provider);
-    }
-  }, [health?.active_provider]);
+  const [provider, setProvider] = useState<'local' | 'meta'>('local');
   const [trialStatus, setTrialStatus] = useState<MetaTrialStatus | null>(null);
   const [isLoadingTrial, setIsLoadingTrial] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -63,26 +56,20 @@ export const CopilotDrawer: React.FC<CopilotDrawerProps> = ({
     },
   ]);
 
-  // Fetch trial status when drawer is opened or provider is changed to a cloud provider
+  // Fetch trial status when drawer is opened or provider is changed to meta
   useEffect(() => {
     if (isOpen) {
-      fetchTrialStatus(provider);
+      fetchTrialStatus();
     }
-  }, [isOpen, provider]);
+  }, [isOpen]);
 
-  const fetchTrialStatus = async (targetProvider: AIProvider = provider) => {
-    if (targetProvider === 'local') {
-      setTrialStatus(null);
-      return;
-    }
+  const fetchTrialStatus = async () => {
     try {
       setIsLoadingTrial(true);
-      const status = targetProvider === 'nvidia'
-        ? await api.getNvidiaTrialStatus()
-        : await api.getMetaTrialStatus();
+      const status = await api.getMetaTrialStatus();
       setTrialStatus(status);
     } catch (err) {
-      console.error(`Failed to fetch ${targetProvider} trial status`, err);
+      console.error('Failed to fetch Meta AI trial status', err);
     } finally {
       setIsLoadingTrial(false);
     }
@@ -90,14 +77,11 @@ export const CopilotDrawer: React.FC<CopilotDrawerProps> = ({
 
   if (!isOpen) return null;
 
-  const isCloudProvider = provider === 'nvidia' || provider === 'meta';
-  const isTrialConsumed = isCloudProvider && trialStatus && !trialStatus.trial_available;
-
   const handleInitiateSend = (textToSend?: string) => {
     const msg = (textToSend || input).trim();
     if (!msg || isSubmitting) return;
 
-    if (isCloudProvider) {
+    if (provider === 'meta') {
       if (trialStatus && !trialStatus.trial_available) {
         // Trial consumed or unconfigured
         return;
@@ -112,7 +96,7 @@ export const CopilotDrawer: React.FC<CopilotDrawerProps> = ({
     executeSend(msg, 'local');
   };
 
-  const executeSend = async (msg: string, activeProvider: AIProvider) => {
+  const executeSend = async (msg: string, activeProvider: 'local' | 'meta') => {
     setShowConfirmModal(false);
     setPendingMessage('');
 
@@ -136,9 +120,9 @@ export const CopilotDrawer: React.FC<CopilotDrawerProps> = ({
       };
       setMessages((prev) => [...prev, botMsg]);
 
-      // If a cloud provider was used, refresh trial status to reflect consumed state
-      if (activeProvider !== 'local') {
-        fetchTrialStatus(activeProvider);
+      // If meta was used, refresh trial status to reflect consumed state
+      if (activeProvider === 'meta') {
+        fetchTrialStatus();
       }
     } catch (err: any) {
       setMessages((prev) => [
@@ -150,13 +134,15 @@ export const CopilotDrawer: React.FC<CopilotDrawerProps> = ({
           timestamp: new Date().toLocaleTimeString(),
         },
       ]);
-      if (activeProvider !== 'local') {
-        fetchTrialStatus(activeProvider);
+      if (activeProvider === 'meta') {
+        fetchTrialStatus();
       }
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  const isMetaConsumed = provider === 'meta' && trialStatus && !trialStatus.trial_available;
 
   return (
     <div className="fixed inset-y-0 right-0 w-[420px] bg-[#0E0E12] border-l border-[#262631] shadow-2xl flex flex-col z-40 animate-in slide-in-from-right duration-200">
@@ -168,7 +154,7 @@ export const CopilotDrawer: React.FC<CopilotDrawerProps> = ({
           </div>
           <div>
             <div className="font-mono text-xs font-bold text-white tracking-wide">CircuitMind Copilot</div>
-            <div className="text-[10px] text-zinc-400 font-mono">Multi-Engine Hardware Assistant</div>
+            <div className="text-[10px] text-zinc-400 font-mono">Dual-Engine Hardware Assistant</div>
           </div>
         </div>
 
@@ -187,13 +173,11 @@ export const CopilotDrawer: React.FC<CopilotDrawerProps> = ({
           <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 font-semibold">
             Inference Provider
           </span>
-          {isCloudProvider && trialStatus && (
+          {provider === 'meta' && trialStatus && (
             <span
               className={`text-[9px] font-mono px-2 py-0.5 rounded-full border ${
                 trialStatus.trial_available
-                  ? provider === 'nvidia'
-                    ? 'bg-emerald-950/60 text-emerald-300 border-emerald-800/60'
-                    : 'bg-purple-950/60 text-purple-300 border-purple-800/60'
+                  ? 'bg-purple-950/60 text-purple-300 border-purple-800/60'
                   : 'bg-zinc-800 text-zinc-400 border-zinc-700'
               }`}
             >
@@ -207,96 +191,39 @@ export const CopilotDrawer: React.FC<CopilotDrawerProps> = ({
           )}
         </div>
 
-        <div className="grid grid-cols-3 gap-1 p-1 bg-[#0A0A0D] rounded-lg border border-[#22222B]">
+        <div className="grid grid-cols-2 gap-1.5 p-1 bg-[#0A0A0D] rounded-lg border border-[#22222B]">
           <button
             type="button"
             onClick={() => setProvider('local')}
-            className={`flex items-center justify-center space-x-1 py-1.5 px-1.5 rounded-md text-[10px] font-mono transition-all ${
+            className={`flex items-center justify-center space-x-1.5 py-1.5 px-2 rounded-md text-[11px] font-mono transition-all ${
               provider === 'local'
                 ? 'bg-[#1E1E28] text-white font-medium shadow-sm border border-[#3E3E52]'
                 : 'text-zinc-400 hover:text-zinc-200'
             }`}
           >
-            <Cpu className="w-3 h-3 text-emerald-400 flex-shrink-0" />
-            <span className="truncate">Local (Ollama)</span>
+            <Cpu className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Local AI (Ollama)</span>
           </button>
 
           <button
             type="button"
-            onClick={() => setProvider('nvidia')}
-            className={`flex items-center justify-center space-x-1 py-1.5 px-1.5 rounded-md text-[10px] font-mono transition-all ${
-              provider === 'nvidia'
-                ? 'bg-[#1E1E28] text-white font-medium shadow-sm border border-[#3E3E52]'
-                : 'text-zinc-400 hover:text-zinc-200'
-            }`}
-          >
-            <Zap className="w-3 h-3 text-emerald-400 flex-shrink-0" />
-            <span className="truncate">NVIDIA (Muse 30B)</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setProvider('meta')}
-            className={`flex items-center justify-center space-x-1 py-1.5 px-1.5 rounded-md text-[10px] font-mono transition-all ${
+            onClick={() => {
+              setProvider('meta');
+              fetchTrialStatus();
+            }}
+            className={`flex items-center justify-center space-x-1.5 py-1.5 px-2 rounded-md text-[11px] font-mono transition-all ${
               provider === 'meta'
                 ? 'bg-[#1E1E28] text-white font-medium shadow-sm border border-[#3E3E52]'
                 : 'text-zinc-400 hover:text-zinc-200'
             }`}
           >
-            <Globe className="w-3 h-3 text-purple-400 flex-shrink-0" />
-            <span className="truncate">Meta AI (API)</span>
+            <Globe className="w-3.5 h-3.5 text-purple-400" />
+            <span>Meta AI (Model API)</span>
           </button>
         </div>
       </div>
 
-      {/* Cloud Provider Notice / Status Banner */}
-      {provider === 'nvidia' && (
-        <div className="px-3 py-2 bg-[#101A16] border-b border-[#1E382A] text-[11px]">
-          {trialStatus?.configured === false ? (
-            <div className="flex items-start space-x-2 text-amber-300">
-              <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="font-medium">NVIDIA NIM not configured on server</p>
-                <p className="text-[10px] text-amber-400/80 mt-0.5">
-                  Set NVIDIA_API_KEY in .env on the backend to activate Muse Glimmer 30B inference.
-                </p>
-              </div>
-            </div>
-          ) : isTrialConsumed ? (
-            <div className="space-y-1.5">
-              <div className="flex items-start space-x-2 text-zinc-300">
-                <ShieldCheck className="w-4 h-4 text-zinc-400 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-semibold text-white">Single-Use Trial Consumed</p>
-                  <p className="text-[10px] text-zinc-400 leading-snug">
-                    Your trial for cloud inference has been used for this browser session.
-                    Local AI (Ollama) is 100% active and unlimited.
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setProvider('local')}
-                className="w-full mt-1 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 py-1 px-2 rounded text-[10px] font-mono flex items-center justify-center space-x-1 transition-colors"
-              >
-                <RotateCcw className="w-3 h-3" />
-                <span>Switch to Unlimited Local AI</span>
-              </button>
-            </div>
-          ) : (
-            <div className="flex items-start space-x-2 text-emerald-200">
-              <Zap className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0 mt-0.5" />
-              <div>
-                <span className="font-medium text-white">NVIDIA NIM Meta Model Trial</span>
-                <p className="text-[10px] text-emerald-300/80 leading-snug">
-                  Meta's Muse Glimmer 30B ({trialStatus?.model || 'meta/muse-glimmer-30b'}) via NVIDIA NIM.
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
+      {/* Meta AI Consumed or Notice Banner */}
       {provider === 'meta' && (
         <div className="px-3 py-2 bg-[#171422] border-b border-[#2C2442] text-[11px]">
           {trialStatus?.configured === false ? (
@@ -309,14 +236,14 @@ export const CopilotDrawer: React.FC<CopilotDrawerProps> = ({
                 </p>
               </div>
             </div>
-          ) : isTrialConsumed ? (
+          ) : isMetaConsumed ? (
             <div className="space-y-1.5">
               <div className="flex items-start space-x-2 text-zinc-300">
                 <ShieldCheck className="w-4 h-4 text-zinc-400 flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="font-semibold text-white">Single-Use Trial Consumed</p>
                   <p className="text-[10px] text-zinc-400 leading-snug">
-                    Your trial for cloud inference has been used for this browser session.
+                    Your one trial for Meta AI cloud inference has been used for this browser session.
                     Local AI (Ollama) is 100% active and unlimited.
                   </p>
                 </div>
@@ -336,7 +263,7 @@ export const CopilotDrawer: React.FC<CopilotDrawerProps> = ({
               <div>
                 <span className="font-medium text-white">Official Meta Model API Trial</span>
                 <p className="text-[10px] text-purple-300/80 leading-snug">
-                  Official Meta API inference ({trialStatus?.model || 'muse-spark-1.3-contributor'}).
+                  1 trial per browser session with high-parameter cloud reasoning ({trialStatus?.model || 'meta-ai'}).
                 </p>
               </div>
             </div>
@@ -347,7 +274,7 @@ export const CopilotDrawer: React.FC<CopilotDrawerProps> = ({
       {/* Quick Action Chips */}
       <div className="px-3 py-2 border-b border-[#262631]/60 bg-[#0E0E12] flex items-center space-x-1.5 overflow-x-auto text-[11px] font-mono no-scrollbar">
         <button
-          disabled={isTrialConsumed || isSubmitting}
+          disabled={isMetaConsumed || isSubmitting}
           onClick={() => handleInitiateSend('Add a red LED to the design')}
           className="bg-[#15151B] hover:bg-[#262631] text-[#818CF8] px-2 py-1 rounded border border-[#262631] whitespace-nowrap transition-colors flex items-center gap-1 disabled:opacity-40"
         >
@@ -355,14 +282,14 @@ export const CopilotDrawer: React.FC<CopilotDrawerProps> = ({
           <span>+ LED</span>
         </button>
         <button
-          disabled={isTrialConsumed || isSubmitting}
+          disabled={isMetaConsumed || isSubmitting}
           onClick={() => handleInitiateSend('Add a buzzer to the design')}
           className="bg-[#15151B] hover:bg-[#262631] text-[#818CF8] px-2 py-1 rounded border border-[#262631] whitespace-nowrap transition-colors disabled:opacity-40"
         >
           + Buzzer
         </button>
         <button
-          disabled={isTrialConsumed || isSubmitting}
+          disabled={isMetaConsumed || isSubmitting}
           onClick={() => handleInitiateSend('Run DRC validation')}
           className="bg-[#15151B] hover:bg-[#262631] text-emerald-400 px-2 py-1 rounded border border-[#262631] whitespace-nowrap transition-colors disabled:opacity-40"
         >
@@ -386,12 +313,7 @@ export const CopilotDrawer: React.FC<CopilotDrawerProps> = ({
             >
               {m.sender === 'copilot' && (
                 <div className="flex items-center space-x-1.5 mb-1.5 pb-1 border-b border-[#262631]/80 text-[10px] font-mono text-zinc-400">
-                  {m.provider === 'nvidia' ? (
-                    <>
-                      <Zap className="w-3 h-3 text-emerald-400" />
-                      <span className="text-emerald-300 font-medium">NVIDIA NIM (Muse 30B)</span>
-                    </>
-                  ) : m.provider === 'meta' ? (
+                  {m.provider === 'meta' ? (
                     <>
                       <Globe className="w-3 h-3 text-purple-400" />
                       <span className="text-purple-300 font-medium">Meta Model API</span>
@@ -431,9 +353,7 @@ export const CopilotDrawer: React.FC<CopilotDrawerProps> = ({
           <div className="flex items-center space-x-2 text-xs font-mono text-[#A1A1AA] bg-[#15151B] border border-[#262631] p-2.5 rounded-lg w-fit">
             <Sparkles className="w-3.5 h-3.5 text-[#818CF8] animate-spin" />
             <span>
-              {provider === 'nvidia'
-                ? 'Querying NVIDIA NIM (Muse Glimmer 30B)...'
-                : provider === 'meta'
+              {provider === 'meta'
                 ? 'Querying Meta Model API...'
                 : 'Processing with Local Ollama...'}
             </span>
@@ -455,34 +375,24 @@ export const CopilotDrawer: React.FC<CopilotDrawerProps> = ({
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder={
-              isTrialConsumed
+              isMetaConsumed
                 ? 'Trial consumed. Switch to Local AI to continue...'
-                : provider === 'nvidia'
-                ? 'Ask NVIDIA NIM Muse 30B Copilot (1 trial)...'
                 : provider === 'meta'
                 ? 'Ask Meta AI Copilot (1 trial)...'
                 : 'Ask Local Copilot or propose a change...'
             }
             className="flex-1 bg-[#0E0E12] border border-[#262631] rounded-md px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#6366F1] font-sans disabled:opacity-50"
-            disabled={isSubmitting || (isTrialConsumed ?? false)}
+            disabled={isSubmitting || (isMetaConsumed ?? false)}
           />
           <button
             type="submit"
-            disabled={isSubmitting || !input.trim() || (isTrialConsumed ?? false)}
+            disabled={isSubmitting || !input.trim() || (isMetaConsumed ?? false)}
             className={`p-2 rounded-md transition-colors disabled:opacity-40 text-white ${
-              provider === 'nvidia'
-                ? 'bg-emerald-600 hover:bg-emerald-500'
-                : provider === 'meta'
+              provider === 'meta'
                 ? 'bg-purple-600 hover:bg-purple-500'
                 : 'bg-[#4F46E5] hover:bg-[#4338CA]'
             }`}
-            title={
-              provider === 'nvidia'
-                ? 'Send with NVIDIA NIM'
-                : provider === 'meta'
-                ? 'Send with Meta AI'
-                : 'Send with Local AI'
-            }
+            title={provider === 'meta' ? 'Send with Meta AI' : 'Send with Local AI'}
           >
             <Send className="w-3.5 h-3.5" />
           </button>
@@ -492,23 +402,21 @@ export const CopilotDrawer: React.FC<CopilotDrawerProps> = ({
       {/* Trial Confirmation Modal */}
       {showConfirmModal && (
         <div className="fixed inset-0 bg-black/75 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-[#15151B] border border-emerald-500/40 rounded-xl max-w-sm w-full p-5 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+          <div className="bg-[#15151B] border border-purple-500/40 rounded-xl max-w-sm w-full p-5 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-start space-x-3">
-              <div className="w-9 h-9 rounded-lg bg-emerald-950/80 border border-emerald-700/50 flex items-center justify-center text-emerald-300 flex-shrink-0">
-                <Zap className="w-5 h-5" />
+              <div className="w-9 h-9 rounded-lg bg-purple-950/80 border border-purple-700/50 flex items-center justify-center text-purple-300 flex-shrink-0">
+                <Globe className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-white font-mono">
-                  {provider === 'nvidia' ? 'Use NVIDIA NIM Single Trial?' : 'Use Meta AI Single Trial?'}
-                </h3>
+                <h3 className="text-sm font-semibold text-white font-mono">Use Meta AI Single Trial?</h3>
                 <p className="text-[11px] text-zinc-400 mt-1 leading-relaxed">
-                  This action consumes your <strong>single trial</strong> for {provider === 'nvidia' ? "Meta's Muse Glimmer 30B through NVIDIA NIM" : 'official Meta Model API'} inference.
+                  This action consumes your <strong>single trial</strong> for official Meta Model API inference.
                 </p>
               </div>
             </div>
 
             <div className="bg-[#0E0E12] border border-[#262631] p-3 rounded-lg text-[11px] text-zinc-300 space-y-2">
-              <div className="flex items-center space-x-2 text-emerald-300 font-mono text-[10px]">
+              <div className="flex items-center space-x-2 text-purple-300 font-mono text-[10px]">
                 <ShieldCheck className="w-3.5 h-3.5" />
                 <span>Stateless Signed Browser Identity</span>
               </div>
@@ -533,12 +441,8 @@ export const CopilotDrawer: React.FC<CopilotDrawerProps> = ({
               </button>
               <button
                 type="button"
-                onClick={() => executeSend(pendingMessage, provider)}
-                className={`flex-1 px-3 py-2 text-white text-xs font-mono font-medium rounded-lg shadow-lg transition-all flex items-center justify-center space-x-1 ${
-                  provider === 'nvidia'
-                    ? 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/30'
-                    : 'bg-purple-600 hover:bg-purple-500 shadow-purple-600/30'
-                }`}
+                onClick={() => executeSend(pendingMessage, 'meta')}
+                className="flex-1 px-3 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-mono font-medium rounded-lg shadow-lg shadow-purple-600/30 transition-all flex items-center justify-center space-x-1"
               >
                 <span>Confirm & Send</span>
               </button>

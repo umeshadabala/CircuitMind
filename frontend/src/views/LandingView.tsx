@@ -131,8 +131,8 @@ export const LandingView: React.FC<LandingViewProps> = ({
     },
     {
       icon: <Globe className="w-5 h-5 text-purple-400" />,
-      title: 'Multi-AI Provider Architecture',
-      desc: 'Choose between 100% private Local AI (Ollama), NVIDIA NIM (Meta Muse Glimmer 30B), or official Meta Model API with HMAC-signed stateless trial authentication.',
+      title: 'Dual-AI Provider Architecture',
+      desc: 'Choose between 100% private Local AI (Ollama) or official high-reasoning Meta Model API with HMAC-signed stateless trial authentication.',
     },
   ];
 
@@ -604,7 +604,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
               Hybrid Inference Infrastructure
             </div>
             <h2 className="text-2xl sm:text-3xl font-bold font-mono text-white">
-              Multi-AI Provider Architecture
+              Dual-AI Provider Architecture
             </h2>
             <p className="text-xs sm:text-sm text-zinc-400 max-w-2xl mx-auto">
               CircuitMind isolates AI reasoning from hardware synthesis. Select the right model engine
@@ -612,133 +612,100 @@ export const LandingView: React.FC<LandingViewProps> = ({
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
             {/* Local AI Engine */}
-            <div className="bg-[#12121A] border border-emerald-500/30 rounded-2xl p-6 space-y-4 flex flex-col justify-between">
-              <div className="space-y-3">
+            <div className="bg-[#12121A] border border-emerald-500/30 rounded-2xl p-7 space-y-5 flex flex-col justify-between">
+              <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-7 h-7 rounded-lg bg-emerald-950/60 border border-emerald-700/60 flex items-center justify-center text-emerald-400">
-                      <Cpu className="w-3.5 h-3.5" />
+                  <div className="flex items-center space-x-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-950/60 border border-emerald-700/60 flex items-center justify-center text-emerald-400">
+                      <Cpu className="w-4 h-4" />
                     </div>
                     <div>
-                      <h3 className="font-mono text-xs font-bold text-white">Local AI (Ollama)</h3>
-                      <span className="text-[9px] font-mono text-emerald-400">Default Production Engine</span>
+                      <h3 className="font-mono text-sm font-bold text-white">Local AI (Ollama)</h3>
+                      <span className="text-[10px] font-mono text-emerald-400">Default Production Engine</span>
                     </div>
                   </div>
-                  <span className="text-[9px] font-mono uppercase bg-emerald-950 text-emerald-300 border border-emerald-800/60 px-2 py-0.5 rounded-full">
+                  <span className="text-[10px] font-mono uppercase bg-emerald-950 text-emerald-300 border border-emerald-800/60 px-2 py-0.5 rounded-full">
                     Unlimited
                   </span>
                 </div>
 
-                <p className="text-[11px] text-zinc-300 font-sans leading-relaxed">
-                  Runs locally on your development machine via Ollama. 100% private, zero data leakage, and infinite prompt iterations.
+                <p className="text-xs text-zinc-300 font-sans leading-relaxed">
+                  Runs locally on your development machine or private server via Ollama.
+                  Provides zero-leakage, offline engineering synthesis with infinite prompt iterations.
                 </p>
 
-                <div className="space-y-1.5 text-[11px] font-mono text-zinc-300 pt-2 border-t border-[#20202E]">
+                <div className="space-y-2 text-xs font-mono text-zinc-300 pt-2 border-t border-[#20202E]">
                   <div className="flex items-center space-x-2">
-                    <Check className="w-3 h-3 text-emerald-400" />
-                    <span>100% Private, zero cloud telemetry</span>
+                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>100% Private, zero telemetry or cloud logging</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Check className="w-3 h-3 text-emerald-400" />
-                    <span>Unlimited design iterations & Copilot</span>
+                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Unlimited design iterations & Copilot queries</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Check className="w-3 h-3 text-emerald-400" />
-                    <span>Works fully offline</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-[#0A0A0E] p-2.5 rounded-lg border border-[#20202E] text-[10px] font-mono text-zinc-400">
-                Endpoint: <span className="text-emerald-400">http://localhost:11434</span>
-              </div>
-            </div>
-
-            {/* NVIDIA NIM Engine */}
-            <div className="bg-[#12121A] border border-emerald-500/40 rounded-2xl p-6 space-y-4 flex flex-col justify-between shadow-lg shadow-emerald-950/20">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-7 h-7 rounded-lg bg-emerald-950/80 border border-emerald-500/60 flex items-center justify-center text-emerald-300">
-                      <Zap className="w-3.5 h-3.5" />
-                    </div>
-                    <div>
-                      <h3 className="font-mono text-xs font-bold text-white">NVIDIA NIM (Muse 30B)</h3>
-                      <span className="text-[9px] font-mono text-emerald-400">Meta Model via NVIDIA API</span>
-                    </div>
-                  </div>
-                  <span className="text-[9px] font-mono uppercase bg-emerald-950 text-emerald-300 border border-emerald-800/60 px-2 py-0.5 rounded-full">
-                    1 Trial / Identity
-                  </span>
-                </div>
-
-                <p className="text-[11px] text-zinc-300 font-sans leading-relaxed">
-                  Integrates Meta's Muse Glimmer 30B via NVIDIA NIM's OpenAI-compatible API. Ultra-fast hardware reasoning with zero retries.
-                </p>
-
-                <div className="space-y-1.5 text-[11px] font-mono text-zinc-300 pt-2 border-t border-[#20202E]">
-                  <div className="flex items-center space-x-2">
-                    <Check className="w-3 h-3 text-emerald-400" />
-                    <span>Official OpenAI Python SDK client</span>
+                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Full support for deepseek-r1, llama3, qwen2.5</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Check className="w-3 h-3 text-emerald-400" />
-                    <span>Stateless HMAC-SHA256 trial security</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Check className="w-3 h-3 text-emerald-400" />
-                    <span>Zero paid request retries</span>
+                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Works fully offline without internet connection</span>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-[#0A0A0E] p-2.5 rounded-lg border border-[#20202E] text-[10px] font-mono text-zinc-400">
-                Model: <span className="text-emerald-300">meta/muse-glimmer-30b</span>
+              <div className="bg-[#0A0A0E] p-3 rounded-lg border border-[#20202E] text-[11px] font-mono text-zinc-400">
+                Active Endpoint: <span className="text-emerald-400">http://localhost:11434</span>
               </div>
             </div>
 
             {/* Meta Model API Engine */}
-            <div className="bg-[#12121A] border border-purple-500/30 rounded-2xl p-6 space-y-4 flex flex-col justify-between">
-              <div className="space-y-3">
+            <div className="bg-[#12121A] border border-purple-500/30 rounded-2xl p-7 space-y-5 flex flex-col justify-between">
+              <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-7 h-7 rounded-lg bg-purple-950/60 border border-purple-700/60 flex items-center justify-center text-purple-300">
-                      <Globe className="w-3.5 h-3.5" />
+                  <div className="flex items-center space-x-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-purple-950/60 border border-purple-700/60 flex items-center justify-center text-purple-300">
+                      <Globe className="w-4 h-4" />
                     </div>
                     <div>
-                      <h3 className="font-mono text-xs font-bold text-white">Meta AI (Official API)</h3>
-                      <span className="text-[9px] font-mono text-purple-300">Cloud Model Reasoning</span>
+                      <h3 className="font-mono text-sm font-bold text-white">Meta AI (Official API)</h3>
+                      <span className="text-[10px] font-mono text-purple-300">Cloud Model Reasoning</span>
                     </div>
                   </div>
-                  <span className="text-[9px] font-mono uppercase bg-purple-950 text-purple-300 border border-purple-800/60 px-2 py-0.5 rounded-full">
+                  <span className="text-[10px] font-mono uppercase bg-purple-950 text-purple-300 border border-purple-800/60 px-2 py-0.5 rounded-full">
                     1 Trial / Identity
                   </span>
                 </div>
 
-                <p className="text-[11px] text-zinc-300 font-sans leading-relaxed">
-                  Integrates with official Meta Model API for high-parameter cloud reasoning with strict stateless single-trial authorization.
+                <p className="text-xs text-zinc-300 font-sans leading-relaxed">
+                  Integrates with official Meta Model API for ultra-high-parameter hardware reasoning.
+                  Enforces strict stateless single-trial authorization using HMAC-signed cookies.
                 </p>
 
-                <div className="space-y-1.5 text-[11px] font-mono text-zinc-300 pt-2 border-t border-[#20202E]">
+                <div className="space-y-2 text-xs font-mono text-zinc-300 pt-2 border-t border-[#20202E]">
                   <div className="flex items-center space-x-2">
-                    <Check className="w-3 h-3 text-purple-400" />
-                    <span>Official Meta API endpoint</span>
+                    <Check className="w-3.5 h-3.5 text-purple-400" />
+                    <span>Official Meta endpoint: https://api.meta.ai/v1</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Check className="w-3 h-3 text-purple-400" />
-                    <span>Stateless signed cookie trial</span>
+                    <Check className="w-3.5 h-3.5 text-purple-400" />
+                    <span>Stateless HMAC-SHA256 browser trial protection</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Check className="w-3 h-3 text-purple-400" />
-                    <span>Zero database dependency</span>
+                    <Check className="w-3.5 h-3.5 text-purple-400" />
+                    <span>Zero database storage: 100% cryptographic token</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Check className="w-3.5 h-3.5 text-purple-400" />
+                    <span>In-process race condition guard & rate limiting</span>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-[#0A0A0E] p-2.5 rounded-lg border border-[#20202E] text-[10px] font-mono text-zinc-400">
-                Model: <span className="text-purple-300">muse-spark-1.3-contributor</span>
+              <div className="bg-[#0A0A0E] p-3 rounded-lg border border-[#20202E] text-[11px] font-mono text-zinc-400">
+                Model: <span className="text-purple-300">meta-ai/llama-3.3-70b-instruct</span>
               </div>
             </div>
           </div>
@@ -878,7 +845,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
           </div>
 
           <div className="flex flex-wrap items-center gap-6">
-            <span>Multi-Provider (Local + NVIDIA NIM + Meta)</span>
+            <span>Dual-AI Architecture (Local + Meta)</span>
             <span>Zero-DB Stateless Security</span>
             <span>KiCad Compatible</span>
           </div>

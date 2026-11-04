@@ -1,7 +1,6 @@
 import logging
 from typing import Any, Dict, List, Optional, Tuple
 from backend.app.ai.meta_client import MetaAIClient, MetaAIError
-from backend.app.ai.nvidia_client import NVIDIAClient, NVIDIAAIError
 from backend.app.ai.ollama_client import OllamaClient, OllamaInferenceError, OllamaUnavailableError
 from backend.app.ai.prompts import SYSTEM_COPILOT_PROMPT
 from backend.app.domain.catalog import get_catalog_item, HARDWARE_CATALOG
@@ -27,18 +26,16 @@ class CopilotService:
         self,
         ollama_client: Optional[OllamaClient] = None,
         meta_client: Optional[MetaAIClient] = None,
-        nvidia_client: Optional[NVIDIAClient] = None,
         repository: Optional[ProjectRepository] = None,
     ):
         self.ollama = ollama_client or OllamaClient()
         self.meta = meta_client or MetaAIClient()
-        self.nvidia = nvidia_client or NVIDIAClient()
         self.repo = repository or ProjectRepository()
 
     async def chat(self, project: Project, user_message: str, provider: str = "local") -> Dict[str, Any]:
         """
         Interacts with the user, analyzing active project context using either
-        Local AI (Ollama), Meta AI (Meta Model API), or NVIDIA NIM (Meta Muse Glimmer).
+        Local AI (Ollama) or Meta AI (Meta Model API).
 
         Strict constraint: Providers are isolated. No silent fallback between providers.
         """
@@ -47,18 +44,8 @@ class CopilotService:
 
         applied_changes: List[str] = []
         rejected_changes: List[str] = []
-        provider_key = provider.lower()
 
-        if provider_key in ("nvidia", "nvidia_nim"):
-            # NVIDIA NIM branch (Meta Muse Glimmer 30B) — single explicit call, no auto-fallback
-            try:
-                res = await self.nvidia.generate_chat_json(prompt=full_prompt, system_prompt=SYSTEM_COPILOT_PROMPT)
-                message = res.get("message", "NVIDIA NIM processed instruction.")
-                actions = res.get("actions", [])
-            except NVIDIAAIError as nae:
-                logger.error("NVIDIA NIM generation failed: %s", nae)
-                raise nae
-        elif provider_key == "meta":
+        if provider.lower() == "meta":
             # Meta Model API branch — single explicit call, no auto-fallback
             try:
                 res = await self.meta.generate_chat_json(prompt=full_prompt, system_prompt=SYSTEM_COPILOT_PROMPT)

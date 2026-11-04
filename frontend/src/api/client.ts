@@ -1,5 +1,4 @@
 import {
-  AIProvider,
   BomResponse,
   CatalogComponent,
   HealthResponse,
@@ -63,10 +62,10 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ prompt }),
     }),
-  synthesizeProject: (projectId: string, prompt: string, provider?: AIProvider) =>
+  synthesizeProject: (projectId: string, prompt: string) =>
     request<Project>(`/api/projects/${projectId}/synthesize`, {
       method: 'POST',
-      body: JSON.stringify({ prompt, provider }),
+      body: JSON.stringify({ prompt }),
     }),
 
   // Graph mutations
@@ -108,24 +107,11 @@ export const api = {
       body: JSON.stringify({ scenario }),
     }),
 
-  // Meta AI & NVIDIA Trial Status
+  // Meta AI Trial
   getMetaTrialStatus: () => request<MetaTrialStatus>('/api/ai/meta/trial-status'),
-  getNvidiaTrialStatus: () => request<MetaTrialStatus>('/api/ai/nvidia/trial-status'),
-
-  // AI Model Selection & BYOK
-  updateAIModels: (data: {
-    ollama_model?: string;
-    nvidia_api_key?: string;
-    nvidia_model?: string;
-    active_provider?: 'local' | 'nvidia' | 'meta';
-  }) =>
-    request<{ status: string; active_provider?: string; ollama: any; nvidia: any }>('/api/settings/ai-models', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }),
 
   // Copilot
-  copilotChat: (projectId: string, message: string, provider: AIProvider = 'local') =>
+  copilotChat: (projectId: string, message: string, provider: 'local' | 'meta' = 'local') =>
     request<{ reply: string; actions_executed: string[]; provider?: string; current_revision: number; project: Project }>(
       `/api/projects/${projectId}/copilot`,
       { method: 'POST', body: JSON.stringify({ message, provider }) }

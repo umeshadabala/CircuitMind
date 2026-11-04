@@ -13,7 +13,7 @@ import {
   PanelRightOpen,
   Sparkles,
 } from 'lucide-react';
-import { Project, CatalogComponent, SimulationArtifact, AIProvider, HealthResponse } from '../types';
+import { Project, CatalogComponent, SimulationArtifact } from '../types';
 import { CanvasPanel } from './panels/CanvasPanel';
 import { InspectorPanel } from './panels/InspectorPanel';
 import { NetlistPanel } from './panels/NetlistPanel';
@@ -33,15 +33,13 @@ interface WorkspaceViewProps {
   onRemoveComponent: (instanceId: string) => Promise<void>;
   onRefreshValidation: () => Promise<void>;
   onRunSimulation: (scenario?: string) => Promise<SimulationArtifact>;
-  onCopilotChat: (message: string, provider?: AIProvider) => Promise<{ reply: string; actions_executed: string[]; provider?: string }>;
+  onCopilotChat: (message: string, provider?: 'local' | 'meta') => Promise<{ reply: string; actions_executed: string[]; provider?: string }>;
   isCopilotOpen: boolean;
   onToggleCopilot: () => void;
   onUpdatePosition?: (instanceId: string, position: { x: number; y: number }) => Promise<void>;
   onAutoLayout?: () => Promise<void>;
   onAutoRepair?: () => Promise<void>;
   onDeleteProject?: (projectId: string) => Promise<void>;
-  health?: HealthResponse | null;
-  onRefreshHealth?: () => Promise<void>;
 }
 
 type TabType = 'canvas' | 'netlist' | 'bom' | 'firmware' | 'validation' | 'simulation' | 'guide' | 'settings';
@@ -61,8 +59,6 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
   onAutoLayout,
   onAutoRepair,
   onDeleteProject,
-  health,
-  onRefreshHealth,
 }) => {
   const [activeTab, setActiveTab] = useState<TabType>('canvas');
   const [selectedInstanceId, setSelectedInstanceId] = useState<string | null>(null);
@@ -225,10 +221,8 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
           {activeTab === 'settings' && (
             <SettingsPanel
               project={project}
-              health={health}
               onUpdateProject={onUpdateProject}
               onDeleteProject={onDeleteProject}
-              onRefreshHealth={onRefreshHealth}
             />
           )}
         </div>
@@ -256,7 +250,6 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
         isOpen={isCopilotOpen}
         onClose={onToggleCopilot}
         onSendMessage={onCopilotChat}
-        health={health}
       />
 
       {/* Add Component Catalog Modal */}

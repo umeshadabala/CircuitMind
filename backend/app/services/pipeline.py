@@ -2,7 +2,6 @@ import logging
 import re
 import uuid
 from typing import Dict, List, Optional, Set, Tuple
-from backend.app.ai.nvidia_client import NVIDIAClient
 from backend.app.ai.ollama_client import OllamaClient, OllamaInferenceError, OllamaUnavailableError
 from backend.app.ai.prompts import (
     SYSTEM_REQUIREMENTS_PROMPT,
@@ -40,25 +39,12 @@ class PipelineService:
     with autonomous controller selection, component traceability, and coherent architectures.
     """
 
-    def __init__(
-        self,
-        ollama_client: Optional[OllamaClient] = None,
-        nvidia_client: Optional[NVIDIAClient] = None,
-        repository: Optional[ProjectRepository] = None,
-    ):
+    def __init__(self, ollama_client: Optional[OllamaClient] = None, repository: Optional[ProjectRepository] = None):
         self.ollama = ollama_client or OllamaClient()
-        self.nvidia = nvidia_client
         self.repo = repository or ProjectRepository()
 
-    async def stage_a_parse_requirements(self, prompt: str, provider: str = "local") -> Requirements:
-        """Stage A: Natural language requirements analysis via local Ollama, NVIDIA NIM, or generic parser."""
-        if provider in ("nvidia", "nvidia_nim") and self.nvidia and self.nvidia.is_configured():
-            try:
-                raw_json = await self.nvidia.generate_chat_json(prompt=prompt, system_prompt=SYSTEM_REQUIREMENTS_PROMPT)
-                return Requirements.model_validate(raw_json)
-            except Exception as e:
-                logger.warning(f"NVIDIA NIM requirements parsing failed ({e}), falling back to Ollama / heuristic.")
-
+    async def stage_a_parse_requirements(self, prompt: str) -> Requirements:
+        """Stage A: Natural language requirements analysis via local Ollama or generic parser."""
         try:
             raw_json = await self.ollama.generate_json(prompt=prompt, system_prompt=SYSTEM_REQUIREMENTS_PROMPT)
             return Requirements.model_validate(raw_json)
@@ -66,9 +52,7 @@ class PipelineService:
             logger.info(f"Ollama inference unavailable ({e}), using generic heuristic parser.")
             return self._generic_requirements_parser(prompt)
 
-    async def stage_b_propose_architecture(
-        self, req: Requirements, selected_board: Optional[str] = None, provider: str = "local"
-    ) -> Architecture:
+    async def stage_b_propose_architecture(self, req: Requirements, selected_board: Optional[str] = None) -> Architecture:
         """Stage B: Architecture proposal resolving functional blocks and catalog parts."""
         req_summary = (
             f"Overview: {req.system_overview}\n"
@@ -77,14 +61,6 @@ class PipelineService:
             f"Controller: {selected_board or req.controller_requirements}"
         )
         system_prompt = build_architecture_system_prompt(selected_board)
-
-        if provider in ("nvidia", "nvidia_nim") and self.nvidia and self.nvidia.is_configured():
-            try:
-                raw_json = await self.nvidia.generate_chat_json(prompt=req_summary, system_prompt=system_prompt)
-                return Architecture.model_validate(raw_json)
-            except Exception as e:
-                logger.warning(f"NVIDIA NIM architecture proposal failed ({e}), falling back to Ollama / heuristic.")
-
         try:
             raw_json = await self.ollama.generate_json(prompt=req_summary, system_prompt=system_prompt)
             return Architecture.model_validate(raw_json)
@@ -255,44 +231,30 @@ class PipelineService:
 
         return instances
 
-    async def execute_full_pipeline(self, project: Project, prompt: str, provider: str = "local") -> Project:
+    async def execute_full_pipeline(self, project: Project, prompt: str) -> Project:
         """Executes full Stages A->G with autonomous board selection, component traceability, and diagnostic trace recording."""
         req_id = str(uuid.uuid4())
-        is_nvidia = provider in ("nvidia", "nvidia_nim") and self.nvidia is not None and self.nvidia.is_configured()
-
         trace = PipelineDiagnosticTrace(
             request_id=req_id,
             project_id=project.id,
-            model_identifier=self.nvidia.model_id if is_nvidia and self.nvidia else self.ollama.model,
-            provider_type="nvidia" if is_nvidia else "ollama",
-            endpoint_url=self.nvidia.base_url if is_nvidia and self.nvidia else self.ollama.base_url,
+            model_identifier=self.ollama.model,
+            provider_type="ollama",
+            endpoint_url=self.ollama.base_url,
             prompt_summary=prompt.strip()[:140],
             project_revision=project.revision + 1,
         )
 
         # Stage A: Requirements
-        req_source = "nvidia" if is_nvidia else "ollama"
-        req = None
-        if is_nvidia and self.nvidia:
-            try:
-                raw_json = await self.nvidia.generate_chat_json(prompt=prompt, system_prompt=SYSTEM_REQUIREMENTS_PROMPT)
-                req = Requirements.model_validate(raw_json)
-                trace.reached_ollama = True
-            except Exception as e:
-                logger.warning(f"Stage A NVIDIA NIM failed ({e}), falling back to Ollama / heuristic.")
-                trace.fallbacks_triggered.append(f"Stage A fallback from NVIDIA: {type(e).__name__}")
-
-        if req is None:
-            try:
-                raw_json = await self.ollama.generate_json(prompt=prompt, system_prompt=SYSTEM_REQUIREMENTS_PROMPT)
-                req = Requirements.model_validate(raw_json)
-                trace.reached_ollama = True
-                req_source = "ollama"
-            except (OllamaUnavailableError, OllamaInferenceError) as e:
-                logger.info(f"Ollama inference unavailable ({e}), using generic heuristic parser.")
-                trace.fallbacks_triggered.append(f"Stage A fallback to heuristic parser: {type(e).__name__}")
-                req_source = "heuristic_fallback"
-                req = self._generic_requirements_parser(prompt)
+        req_source = "ollama"
+        try:
+            raw_json = await self.ollama.generate_json(prompt=prompt, system_prompt=SYSTEM_REQUIREMENTS_PROMPT)
+            req = Requirements.model_validate(raw_json)
+            trace.reached_ollama = True
+        except (OllamaUnavailableError, OllamaInferenceError) as e:
+            logger.info(f"Ollama inference unavailable ({e}), using generic heuristic parser.")
+            trace.fallbacks_triggered.append(f"Stage A fallback to heuristic parser: {type(e).__name__}")
+            req_source = "heuristic_fallback"
+            req = self._generic_requirements_parser(prompt)
 
         project.requirements = req
         trace.validated_requirements = req.model_dump()
@@ -306,7 +268,7 @@ class PipelineService:
         trace.board_selection = board_decision.model_dump()
 
         # Stage B: Architecture
-        arch_source = "nvidia" if is_nvidia else "ollama"
+        arch_source = "ollama"
         req_summary = (
             f"Overview: {req.system_overview}\n"
             f"Inputs: {', '.join(req.inputs_and_sensors)}\n"
@@ -314,27 +276,15 @@ class PipelineService:
             f"Controller: {board_decision.selected_board}"
         )
         system_prompt = build_architecture_system_prompt(board_decision.selected_board)
-        arch = None
-        if is_nvidia and self.nvidia:
-            try:
-                raw_json = await self.nvidia.generate_chat_json(prompt=req_summary, system_prompt=system_prompt)
-                arch = Architecture.model_validate(raw_json)
-                trace.reached_ollama = True
-            except Exception as e:
-                logger.warning(f"Stage B NVIDIA NIM failed ({e}), falling back to Ollama / heuristic.")
-                trace.fallbacks_triggered.append(f"Stage B fallback from NVIDIA: {type(e).__name__}")
-
-        if arch is None:
-            try:
-                raw_json = await self.ollama.generate_json(prompt=req_summary, system_prompt=system_prompt)
-                arch = Architecture.model_validate(raw_json)
-                trace.reached_ollama = True
-                arch_source = "ollama"
-            except (OllamaUnavailableError, OllamaInferenceError) as e:
-                logger.info(f"Stage B Ollama inference failed ({e}), using generic architecture fallback.")
-                trace.fallbacks_triggered.append(f"Stage B fallback to heuristic architecture: {type(e).__name__}")
-                arch_source = "heuristic_fallback"
-                arch = self._generic_architecture_proposal(req, board_decision.selected_board)
+        try:
+            raw_json = await self.ollama.generate_json(prompt=req_summary, system_prompt=system_prompt)
+            arch = Architecture.model_validate(raw_json)
+            trace.reached_ollama = True
+        except (OllamaUnavailableError, OllamaInferenceError) as e:
+            logger.info(f"Stage B Ollama inference failed ({e}), using generic architecture fallback.")
+            trace.fallbacks_triggered.append(f"Stage B fallback to heuristic architecture: {type(e).__name__}")
+            arch_source = "heuristic_fallback"
+            arch = self._generic_architecture_proposal(req, board_decision.selected_board)
 
         project.architecture = arch
         trace.architecture_proposal = arch.model_dump()

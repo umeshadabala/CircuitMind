@@ -259,10 +259,10 @@ export interface NetlistResponse {
   kicad_format: string;
 }
 
-export type AIProvider = 'local' | 'meta' | 'nvidia';
+export type AIProvider = 'local' | 'meta';
 
 export interface MetaTrialStatus {
-  provider: 'meta' | 'nvidia';
+  provider: 'meta';
   status: 'available' | 'processing' | 'consumed' | 'unavailable';
   trial_available: boolean;
   configured: boolean;
@@ -272,7 +272,6 @@ export interface MetaTrialStatus {
 export interface HealthResponse {
   status: string;
   version: string;
-  active_provider?: 'local' | 'nvidia' | 'meta';
   ollama: {
     status: string;
     base_url: string;
@@ -282,14 +281,6 @@ export interface HealthResponse {
     detail?: string;
   };
   meta?: {
-    status: string;
-    configured: boolean;
-    model: string;
-    model_verified?: boolean;
-    available_models?: string[];
-    detail?: string;
-  };
-  nvidia?: {
     status: string;
     configured: boolean;
     model: string;

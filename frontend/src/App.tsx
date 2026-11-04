@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { api } from './api/client';
-import { Project, CatalogComponent, HealthResponse, AIProvider } from './types';
+import { Project, CatalogComponent, HealthResponse } from './types';
 import { Header } from './components/Header';
-import { SettingsModal } from './components/SettingsModal';
 import { LandingView } from './views/LandingView';
 import { DashboardView } from './views/DashboardView';
 import { NewProjectView } from './views/NewProjectView';
@@ -18,7 +17,6 @@ export const App: React.FC = () => {
   const [initialPrompt, setInitialPrompt] = useState<string>('');
   const [initialName, setInitialName] = useState<string>('');
   const [isCopilotOpen, setIsCopilotOpen] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Load health, catalog, and projects on mount
@@ -51,9 +49,8 @@ export const App: React.FC = () => {
       // 1. Create base project
       const newProj = await api.createProject({ name, target_board: targetBoard });
 
-      // 2. Run synthesis pipeline with currently selected AI engine (Local Ollama or NVIDIA NIM)
-      const currentProvider = health?.active_provider || 'local';
-      const synthesized = await api.synthesizeProject(newProj.id, prompt, currentProvider);
+      // 2. Run synthesis pipeline
+      const synthesized = await api.synthesizeProject(newProj.id, prompt);
 
       setProjects((prev) => [synthesized, ...prev]);
       setActiveProjectId(synthesized.id);
@@ -138,7 +135,7 @@ export const App: React.FC = () => {
     return sim;
   };
 
-  const handleCopilotChat = async (message: string, provider: AIProvider = 'local') => {
+  const handleCopilotChat = async (message: string, provider: 'local' | 'meta' = 'local') => {
     if (!activeProjectId) throw new Error('No active project');
     const res = await api.copilotChat(activeProjectId, message, provider);
     if (res.project) {
@@ -192,19 +189,6 @@ export const App: React.FC = () => {
         currentView={view}
         onOpenCopilot={view === 'workspace' ? () => setIsCopilotOpen(!isCopilotOpen) : undefined}
         isCopilotOpen={isCopilotOpen}
-        onRefreshHealth={loadInitialData}
-        onOpenSettings={() => setIsSettingsOpen(true)}
-      />
-
-      {/* Global Settings Modal */}
-      <SettingsModal
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-        project={activeProject}
-        health={health}
-        onRefreshHealth={loadInitialData}
-        onUpdateProject={handleUpdateProject}
-        onDeleteProject={handleDeleteProject}
       />
 
       {/* Global Error Banner */}
@@ -272,8 +256,6 @@ export const App: React.FC = () => {
             onAutoLayout={handleAutoLayout}
             onAutoRepair={handleAutoRepair}
             onDeleteProject={handleDeleteProject}
-            health={health}
-            onRefreshHealth={loadInitialData}
           />
         )}
       </main>

@@ -15,7 +15,7 @@ class Settings:
 
     # Local Ollama Inference (Zero remote/paid AI calls)
     OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434").rstrip("/")
-    OLLAMA_MODEL: str = os.getenv("OLLAMA_MODEL", "muse-spark-open:cloud")
+    OLLAMA_MODEL: str = os.getenv("OLLAMA_MODEL", "gpt-oss:120b-cloud")
     OLLAMA_TIMEOUT_SECONDS: float = float(os.getenv("OLLAMA_TIMEOUT_SECONDS", "60.0"))
 
     # Database
@@ -30,14 +30,6 @@ class Settings:
     META_MAX_PROMPT_CHARS: int = int(os.getenv("META_MAX_PROMPT_CHARS", "3000"))
     META_TRIAL_SECRET: str = os.getenv("META_TRIAL_SECRET", "circuitmind-meta-trial-hmac-secret-v1")
     COOKIE_SECURE: bool = os.getenv("COOKIE_SECURE", "false").lower() in ("true", "1", "yes")
-
-    # NVIDIA NIM Configuration (Meta models via NVIDIA OpenAI-compatible API)
-    NVIDIA_API_KEY: str = os.getenv("NVIDIA_API_KEY", "")
-    NVIDIA_BASE_URL: str = os.getenv("NVIDIA_BASE_URL", "https://integrate.api.nvidia.com/v1").rstrip("/")
-    NVIDIA_MODEL: str = os.getenv("NVIDIA_MODEL", "meta/muse-glimmer-30b")
-    NVIDIA_TIMEOUT_SECONDS: float = float(os.getenv("NVIDIA_TIMEOUT_SECONDS", "30.0"))
-    NVIDIA_MAX_OUTPUT_TOKENS: int = int(os.getenv("NVIDIA_MAX_OUTPUT_TOKENS", "1024"))
-    NVIDIA_MAX_PROMPT_CHARS: int = int(os.getenv("NVIDIA_MAX_PROMPT_CHARS", "3000"))
 
 
 settings = Settings()

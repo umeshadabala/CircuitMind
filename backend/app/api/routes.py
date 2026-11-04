@@ -1,6 +1,5 @@
 from datetime import datetime, timezone
 import logging
-import os
 from typing import Any, Dict, List, Optional
 import uuid
 from fastapi import APIRouter, HTTPException, Request, Response, status
@@ -8,7 +7,6 @@ from pydantic import BaseModel, Field
 
 from backend.app.ai.copilot import CopilotService
 from backend.app.ai.meta_client import MetaAIClient, MetaAIError
-from backend.app.ai.nvidia_client import NVIDIAClient, NVIDIAAIError
 from backend.app.ai.ollama_client import OllamaClient
 from backend.app.ai.trial_manager import trial_manager, TrialPolicyError
 from backend.app.config import settings
@@ -35,23 +33,10 @@ from backend.app.storage.repository import ProjectRepository
 api_router = APIRouter(prefix="/api")
 logger = logging.getLogger("circuitmind.api")
 repo = ProjectRepository()
-ollama_client = OllamaClient()
+pipeline_service = PipelineService(repository=repo)
 meta_client = MetaAIClient()
-nvidia_client = NVIDIAClient()
-pipeline_service = PipelineService(
-    ollama_client=ollama_client,
-    nvidia_client=nvidia_client,
-    repository=repo,
-)
-copilot_service = CopilotService(
-    ollama_client=ollama_client,
-    meta_client=meta_client,
-    nvidia_client=nvidia_client,
-    repository=repo,
-)
-
-# Global active AI engine provider ("local" or "nvidia")
-active_provider: str = "local"
+ollama_client = OllamaClient()
+copilot_service = CopilotService(ollama_client=ollama_client, meta_client=meta_client, repository=repo)
 
 
 # ================= HEALTH & STATUS =================
@@ -59,14 +44,11 @@ active_provider: str = "local"
 async def get_health():
     ollama_info = await ollama_client.check_health()
     meta_info = await meta_client.check_availability()
-    nvidia_info = await nvidia_client.check_availability()
     return {
         "status": "ok",
         "version": "1.0.0",
-        "active_provider": active_provider,
         "ollama": ollama_info,
         "meta": meta_info,
-        "nvidia": nvidia_info,
     }
 
 
@@ -88,89 +70,6 @@ async def get_meta_trial_status(request: Request, response: Response):
         "trial_available": state == "available",
         "configured": meta_client.is_configured(),
         "model": meta_client.model_id,
-    }
-
-
-# ================= NVIDIA NIM TRIAL STATUS =================
-@api_router.get("/ai/nvidia/trial-status")
-async def get_nvidia_trial_status(request: Request, response: Response):
-    """
-    Stateless inspection and issuance of the signed trial cookie for NVIDIA NIM.
-    Enforces the single-use trial policy for public cloud inference.
-    """
-    state, tid = trial_manager.get_trial_status(request)
-    if not request.cookies.get("cm_meta_trial"):
-        # Provision initial available signed cookie on new browser session
-        trial_manager.set_trial_cookie(response, state="available", token_id=tid or None)
-
-    return {
-        "provider": "nvidia",
-        "status": state,
-        "trial_available": state == "available",
-        "configured": nvidia_client.is_configured(),
-        "model": nvidia_client.model_id,
-    }
-
-
-# ================= AI MODEL SELECTION & BYOK =================
-class UpdateAIModelsRequest(BaseModel):
-    ollama_model: Optional[str] = None
-    nvidia_api_key: Optional[str] = None
-    nvidia_model: Optional[str] = None
-    active_provider: Optional[str] = None
-
-
-@api_router.post("/settings/ai-models")
-async def update_ai_models(req: UpdateAIModelsRequest):
-    """
-    Updates the active Ollama model, NVIDIA NIM BYOK configuration, and/or active AI engine.
-    Allows users to dynamically switch between Local Ollama and NVIDIA NIM for both
-    normal pipeline synthesis and Copilot operations.
-    """
-    global active_provider
-
-    if req.active_provider is not None:
-        p = req.active_provider.lower().strip()
-        if p in ("local", "ollama", "nvidia", "nvidia_nim", "meta"):
-            active_provider = "nvidia" if p in ("nvidia", "nvidia_nim") else ("meta" if p == "meta" else "local")
-
-    if req.ollama_model is not None:
-        trimmed_ollama = req.ollama_model.strip()
-        if trimmed_ollama:
-            ollama_client.model = trimmed_ollama
-            os.environ["OLLAMA_MODEL"] = trimmed_ollama
-            settings.OLLAMA_MODEL = trimmed_ollama
-
-    if req.nvidia_api_key is not None:
-        trimmed_key = req.nvidia_api_key.strip()
-        nvidia_client.api_key = trimmed_key if trimmed_key else None
-        if trimmed_key:
-            os.environ["NVIDIA_API_KEY"] = trimmed_key
-            settings.NVIDIA_API_KEY = trimmed_key
-            # If a key is added and provider wasn't explicitly set to local, switch to nvidia
-            if req.active_provider is None:
-                active_provider = "nvidia"
-        else:
-            os.environ.pop("NVIDIA_API_KEY", None)
-            settings.NVIDIA_API_KEY = ""
-            if active_provider == "nvidia":
-                active_provider = "local"
-
-    if req.nvidia_model is not None:
-        trimmed_nvidia_model = req.nvidia_model.strip()
-        if trimmed_nvidia_model:
-            nvidia_client.model_id = trimmed_nvidia_model
-            os.environ["NVIDIA_MODEL"] = trimmed_nvidia_model
-            settings.NVIDIA_MODEL = trimmed_nvidia_model
-
-    ollama_info = await ollama_client.check_health()
-    nvidia_info = await nvidia_client.check_availability()
-
-    return {
-        "status": "ok",
-        "active_provider": active_provider,
-        "ollama": ollama_info,
-        "nvidia": nvidia_info,
     }
 
 
@@ -275,18 +174,15 @@ def delete_project(project_id: str):
 # ================= PIPELINE & SYNTHESIS =================
 class ParseRequirementsRequest(BaseModel):
     prompt: str
-    provider: Optional[str] = None
 
 
 class SynthesizeRequest(BaseModel):
     prompt: str
-    provider: Optional[str] = None
 
 
 @api_router.post("/pipeline/parse-requirements", response_model=Requirements)
 async def parse_requirements(req: ParseRequirementsRequest):
-    prov = req.provider or active_provider
-    return await pipeline_service.stage_a_parse_requirements(req.prompt, provider=prov)
+    return await pipeline_service.stage_a_parse_requirements(req.prompt)
 
 
 @api_router.post("/projects/{project_id}/synthesize", response_model=Project)
@@ -295,8 +191,7 @@ async def synthesize_project(project_id: str, req: SynthesizeRequest):
     if not proj:
         raise HTTPException(status_code=404, detail="Project not found")
     try:
-        prov = req.provider or active_provider
-        updated = await pipeline_service.execute_full_pipeline(proj, req.prompt, provider=prov)
+        updated = await pipeline_service.execute_full_pipeline(proj, req.prompt)
         return updated
     except Exception as e:
         logger.exception("Project synthesis pipeline failed")
@@ -535,7 +430,7 @@ async def simulate_project(project_id: str, req: SimulateRequest):
 # ================= COPILOT =================
 class CopilotMessageRequest(BaseModel):
     message: str
-    provider: Optional[str] = None
+    provider: Optional[str] = "local"
 
 
 @api_router.post("/projects/{project_id}/copilot")
@@ -549,22 +444,17 @@ async def copilot_chat(
     if not proj:
         raise HTTPException(status_code=404, detail="Project not found")
 
-    prov_raw = req.provider or active_provider or "local"
-    provider = prov_raw.lower()
+    provider = (req.provider or "local").lower()
 
-    if provider in ("meta", "nvidia", "nvidia_nim"):
-        provider_key = "nvidia" if provider in ("nvidia", "nvidia_nim") else "meta"
-        max_chars = settings.NVIDIA_MAX_PROMPT_CHARS if provider_key == "nvidia" else settings.META_MAX_PROMPT_CHARS
-        provider_label = "NVIDIA NIM" if provider_key == "nvidia" else "Meta AI"
-
-        # Strict Cloud AI One-Trial Guardrails
+    if provider == "meta":
+        # Strict Meta AI One-Trial Guardrails
         if not req.message or not req.message.strip():
-            raise HTTPException(status_code=400, detail=f"Empty prompt cannot be submitted to {provider_label}.")
+            raise HTTPException(status_code=400, detail="Empty prompt cannot be submitted to Meta AI.")
 
-        if len(req.message) > max_chars:
+        if len(req.message) > settings.META_MAX_PROMPT_CHARS:
             raise HTTPException(
                 status_code=400,
-                detail=f"Prompt exceeds maximum character limit ({len(req.message)} > {max_chars}).",
+                detail=f"Prompt exceeds maximum character limit ({len(req.message)} > {settings.META_MAX_PROMPT_CHARS}).",
             )
 
         # 1. Reserve trial and verify signed cookie eligibility
@@ -573,14 +463,12 @@ async def copilot_chat(
         except TrialPolicyError as tpe:
             raise HTTPException(status_code=tpe.status_code, detail=str(tpe))
 
-        # 2. Invoke external API and unconditionally consume trial token
+        # 2. Invoke external Meta API and unconditionally consume trial token
         try:
-            res = await copilot_service.chat(proj, req.message, provider=provider_key)
+            res = await copilot_service.chat(proj, req.message, provider="meta")
             return res
         except MetaAIError as mae:
             raise HTTPException(status_code=mae.status_code or 502, detail=mae.user_message)
-        except NVIDIAAIError as nae:
-            raise HTTPException(status_code=nae.status_code or 502, detail=nae.user_message)
         finally:
             await trial_manager.release_and_consume_trial(token_id, response, state="consumed")
 
