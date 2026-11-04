@@ -53,7 +53,7 @@ class FlightSimulatorAdapter(SimulationAdapter):
 
     def generate_bundle(self, project: Project) -> SimulationBundle:
         airframe_config = (
-            "# CircuitMind 2.0 PX4 Airframe Configuration\n"
+            "# CircuitMind PX4 Airframe Configuration\n"
             f"# Project: {project.name} (Rev {project.revision})\n"
             "SYS_AUTOSTART = 4001 # Generic Quadcopter X frame\n"
             "MOT_ORDERING = 1     # Betaflight / DShot standard\n"

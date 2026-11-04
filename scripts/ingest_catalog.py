@@ -20,7 +20,7 @@ from backend.app.domain.models import CatalogComponent, PinRole, PinDirection
 
 
 def validate_catalog() -> int:
-    print(f"=== CircuitMind 2.0 Catalog Ingestion & Invariant Validation ===")
+    print(f"=== CircuitMind Catalog Ingestion & Invariant Validation ===")
     items = list_catalog_items()
     print(f"Validating {len(items)} catalog components...")
 

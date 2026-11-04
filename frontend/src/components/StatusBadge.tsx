@@ -10,7 +10,7 @@ interface StatusBadgeProps {
 export const StatusBadge: React.FC<StatusBadgeProps> = ({ severity = 'INFO', label, size = 'sm' }) => {
   const sizeClasses = size === 'sm' ? 'px-2 py-0.5 text-[11px]' : 'px-3 py-1 text-xs';
 
-  let colorClasses = 'bg-[#18181F] text-[#A1A1AA] border-[#2A2A35]';
+  let colorClasses = 'bg-[#151F2B] text-[#96A6A3] border-[#25332F]';
 
   if (severity === 'ERROR') {
     colorClasses = 'bg-rose-950/50 text-rose-300 border-rose-800/60';

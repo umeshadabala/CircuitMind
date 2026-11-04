@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   X,
   Send,
@@ -6,14 +6,13 @@ import {
   Zap,
   CheckCircle2,
   Cpu,
-  Globe,
-  AlertCircle,
+  Bot,
   HelpCircle,
   ShieldCheck,
-  RotateCcw,
+  Terminal,
+  BookOpen,
 } from 'lucide-react';
-import { Project, MetaTrialStatus } from '../../types';
-import { api } from '../../api/client';
+import { Project } from '../../types';
 
 interface CopilotDrawerProps {
   project: Project;
@@ -25,11 +24,13 @@ interface CopilotDrawerProps {
   ) => Promise<{ reply: string; actions_executed: string[]; provider?: string }>;
 }
 
+type CopilotMode = 'copilot' | 'assistant';
+
 interface Message {
   sender: 'user' | 'copilot';
   text: string;
   actions?: string[];
-  provider?: string;
+  mode?: CopilotMode;
   timestamp: string;
 }
 
@@ -39,66 +40,28 @@ export const CopilotDrawer: React.FC<CopilotDrawerProps> = ({
   onClose,
   onSendMessage,
 }) => {
-  const [provider, setProvider] = useState<'local' | 'meta'>('local');
-  const [trialStatus, setTrialStatus] = useState<MetaTrialStatus | null>(null);
-  const [isLoadingTrial, setIsLoadingTrial] = useState(false);
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [pendingMessage, setPendingMessage] = useState<string>('');
-
+  const [mode, setMode] = useState<CopilotMode>('copilot');
   const [input, setInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       sender: 'copilot',
-      text: `Hello! I am CircuitMind Copilot, configured with ${project.name} (Rev ${project.revision}). I can explain electrical rules, suggest components, or execute mutations on your circuit graph.`,
-      provider: 'local',
+      text: `Hello! I am your CircuitMind Engineering Copilot, loaded with ${project.name} (Rev ${project.revision}).\n\nI can explain active pin assignments, interpret DRC findings, suggest hardware additions, or answer general electronics engineering questions.`,
+      mode: 'copilot',
       timestamp: new Date().toLocaleTimeString(),
     },
   ]);
 
-  // Fetch trial status when drawer is opened or provider is changed to meta
-  useEffect(() => {
-    if (isOpen) {
-      fetchTrialStatus();
-    }
-  }, [isOpen]);
-
-  const fetchTrialStatus = async () => {
-    try {
-      setIsLoadingTrial(true);
-      const status = await api.getMetaTrialStatus();
-      setTrialStatus(status);
-    } catch (err) {
-      console.error('Failed to fetch Meta AI trial status', err);
-    } finally {
-      setIsLoadingTrial(false);
-    }
-  };
-
   if (!isOpen) return null;
 
-  const handleInitiateSend = (textToSend?: string) => {
+  const handleSend = async (textToSend?: string) => {
     const msg = (textToSend || input).trim();
     if (!msg || isSubmitting) return;
 
-    if (provider === 'meta') {
-      if (trialStatus && !trialStatus.trial_available) {
-        // Trial consumed or unconfigured
-        return;
-      }
-      // Require user confirmation before consuming the single trial
-      setPendingMessage(msg);
-      setShowConfirmModal(true);
-      return;
-    }
-
-    // Local AI sends directly
-    executeSend(msg, 'local');
-  };
-
-  const executeSend = async (msg: string, activeProvider: 'local' | 'meta') => {
-    setShowConfirmModal(false);
-    setPendingMessage('');
+    // Prepend mode prefix for context if in general assistant mode
+    const promptToSend = mode === 'assistant' 
+      ? `[General Electronics Question]: ${msg}`
+      : msg;
 
     const userMsg: Message = {
       sender: 'user',
@@ -110,191 +73,160 @@ export const CopilotDrawer: React.FC<CopilotDrawerProps> = ({
     setIsSubmitting(true);
 
     try {
-      const res = await onSendMessage(msg, activeProvider);
+      const res = await onSendMessage(promptToSend, 'local');
       const botMsg: Message = {
         sender: 'copilot',
         text: res.reply,
         actions: res.actions_executed,
-        provider: res.provider || activeProvider,
+        mode,
         timestamp: new Date().toLocaleTimeString(),
       };
       setMessages((prev) => [...prev, botMsg]);
-
-      // If meta was used, refresh trial status to reflect consumed state
-      if (activeProvider === 'meta') {
-        fetchTrialStatus();
-      }
     } catch (err: any) {
       setMessages((prev) => [
         ...prev,
         {
           sender: 'copilot',
           text: `Request failed: ${err.message}`,
-          provider: activeProvider,
+          mode,
           timestamp: new Date().toLocaleTimeString(),
         },
       ]);
-      if (activeProvider === 'meta') {
-        fetchTrialStatus();
-      }
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const isMetaConsumed = provider === 'meta' && trialStatus && !trialStatus.trial_available;
-
   return (
-    <div className="fixed inset-y-0 right-0 w-[420px] bg-[#0E0E12] border-l border-[#262631] shadow-2xl flex flex-col z-40 animate-in slide-in-from-right duration-200">
+    <div className="fixed inset-y-0 right-0 w-[420px] bg-[#090D12] dark:bg-[#090D12] bg-white border-l border-[#25332F] dark:border-[#25332F] border-slate-200 shadow-2xl flex flex-col z-40 animate-in slide-in-from-right duration-200">
       {/* Drawer Header */}
-      <div className="p-3.5 border-b border-[#262631] flex items-center justify-between bg-[#15151B]">
+      <div className="p-3.5 border-b border-[#25332F] dark:border-[#25332F] border-slate-200 flex items-center justify-between bg-[#101720] dark:bg-[#101720] bg-slate-50">
         <div className="flex items-center space-x-2">
-          <div className="w-6 h-6 rounded bg-[#6366F1]/20 border border-[#6366F1]/40 flex items-center justify-center text-[#818CF8]">
+          <div className="w-6 h-6 rounded bg-[#356B62]/20 border border-[#356B62]/40 flex items-center justify-center text-[#5B9B8D]">
             <Sparkles className="w-3.5 h-3.5" />
           </div>
           <div>
-            <div className="font-mono text-xs font-bold text-white tracking-wide">CircuitMind Copilot</div>
-            <div className="text-[10px] text-zinc-400 font-mono">Dual-Engine Hardware Assistant</div>
+            <div className="font-mono text-xs font-bold text-[#F1F5F4] dark:text-[#F1F5F4] text-slate-900 tracking-wide">
+              CircuitMind Copilot
+            </div>
+            <div className="text-[10px] text-[#96A6A3] dark:text-[#96A6A3] text-slate-500 font-mono">
+              Ollama · gpt-oss:120b-cloud
+            </div>
           </div>
         </div>
 
         <button
           onClick={onClose}
-          className="text-zinc-400 hover:text-white p-1 rounded hover:bg-[#262631] transition-colors"
+          className="text-[#96A6A3] hover:text-[#F1F5F4] dark:hover:text-[#F1F5F4] text-slate-500 hover:text-slate-900 p-1 rounded hover:bg-[#151F2B] transition-colors"
           title="Close Copilot"
         >
           <X className="w-4 h-4" />
         </button>
       </div>
 
-      {/* Provider Selector Switcher */}
-      <div className="px-3 py-2.5 bg-[#121217] border-b border-[#262631]">
-        <div className="flex items-center justify-between mb-1.5">
-          <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 font-semibold">
-            Inference Provider
-          </span>
-          {provider === 'meta' && trialStatus && (
-            <span
-              className={`text-[9px] font-mono px-2 py-0.5 rounded-full border ${
-                trialStatus.trial_available
-                  ? 'bg-purple-950/60 text-purple-300 border-purple-800/60'
-                  : 'bg-zinc-800 text-zinc-400 border-zinc-700'
-              }`}
-            >
-              {trialStatus.trial_available ? '1 Trial Available' : 'Trial Consumed'}
-            </span>
-          )}
-          {provider === 'local' && (
-            <span className="text-[9px] font-mono text-emerald-400 bg-emerald-950/50 px-2 py-0.5 rounded-full border border-emerald-800/50">
-              Unlimited
-            </span>
-          )}
-        </div>
-
-        <div className="grid grid-cols-2 gap-1.5 p-1 bg-[#0A0A0D] rounded-lg border border-[#22222B]">
+      {/* Mode Switcher Tabs */}
+      <div className="px-3 py-2 bg-[#101720] dark:bg-[#101720] bg-slate-100 border-b border-[#25332F] dark:border-[#25332F] border-slate-200">
+        <div className="grid grid-cols-2 gap-1 p-0.5 bg-[#090D12] dark:bg-[#090D12] bg-slate-200 rounded-lg border border-[#25332F] dark:border-[#25332F] border-slate-300">
           <button
             type="button"
-            onClick={() => setProvider('local')}
+            onClick={() => setMode('copilot')}
             className={`flex items-center justify-center space-x-1.5 py-1.5 px-2 rounded-md text-[11px] font-mono transition-all ${
-              provider === 'local'
-                ? 'bg-[#1E1E28] text-white font-medium shadow-sm border border-[#3E3E52]'
-                : 'text-zinc-400 hover:text-zinc-200'
+              mode === 'copilot'
+                ? 'bg-[#151F2B] dark:bg-[#151F2B] bg-white text-[#F1F5F4] dark:text-[#F1F5F4] text-slate-900 font-medium shadow-sm border border-[#25332F] dark:border-[#25332F] border-slate-300'
+                : 'text-[#96A6A3] dark:text-[#96A6A3] text-slate-600 hover:text-[#F1F5F4] dark:hover:text-[#F1F5F4] hover:text-slate-900'
             }`}
           >
-            <Cpu className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Local AI (Ollama)</span>
+            <Bot className="w-3.5 h-3.5 text-[#5B9B8D]" />
+            <span>Engineering Copilot</span>
           </button>
 
           <button
             type="button"
-            onClick={() => {
-              setProvider('meta');
-              fetchTrialStatus();
-            }}
+            onClick={() => setMode('assistant')}
             className={`flex items-center justify-center space-x-1.5 py-1.5 px-2 rounded-md text-[11px] font-mono transition-all ${
-              provider === 'meta'
-                ? 'bg-[#1E1E28] text-white font-medium shadow-sm border border-[#3E3E52]'
-                : 'text-zinc-400 hover:text-zinc-200'
+              mode === 'assistant'
+                ? 'bg-[#151F2B] dark:bg-[#151F2B] bg-white text-[#F1F5F4] dark:text-[#F1F5F4] text-slate-900 font-medium shadow-sm border border-[#25332F] dark:border-[#25332F] border-slate-300'
+                : 'text-[#96A6A3] dark:text-[#96A6A3] text-slate-600 hover:text-[#F1F5F4] dark:hover:text-[#F1F5F4] hover:text-slate-900'
             }`}
           >
-            <Globe className="w-3.5 h-3.5 text-purple-400" />
-            <span>Meta AI (Model API)</span>
+            <BookOpen className="w-3.5 h-3.5 text-amber-400" />
+            <span>Normal AI Assistant</span>
           </button>
         </div>
       </div>
 
-      {/* Meta AI Consumed or Notice Banner */}
-      {provider === 'meta' && (
-        <div className="px-3 py-2 bg-[#171422] border-b border-[#2C2442] text-[11px]">
-          {trialStatus?.configured === false ? (
-            <div className="flex items-start space-x-2 text-amber-300">
-              <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="font-medium">Meta AI not configured on server</p>
-                <p className="text-[10px] text-amber-400/80 mt-0.5">
-                  Set MODEL_API_KEY on the backend to activate Meta AI inference.
-                </p>
-              </div>
-            </div>
-          ) : isMetaConsumed ? (
-            <div className="space-y-1.5">
-              <div className="flex items-start space-x-2 text-zinc-300">
-                <ShieldCheck className="w-4 h-4 text-zinc-400 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-semibold text-white">Single-Use Trial Consumed</p>
-                  <p className="text-[10px] text-zinc-400 leading-snug">
-                    Your one trial for Meta AI cloud inference has been used for this browser session.
-                    Local AI (Ollama) is 100% active and unlimited.
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setProvider('local')}
-                className="w-full mt-1 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 py-1 px-2 rounded text-[10px] font-mono flex items-center justify-center space-x-1 transition-colors"
-              >
-                <RotateCcw className="w-3 h-3" />
-                <span>Switch to Unlimited Local AI</span>
-              </button>
-            </div>
-          ) : (
-            <div className="flex items-start space-x-2 text-purple-200">
-              <Sparkles className="w-3.5 h-3.5 text-purple-400 flex-shrink-0 mt-0.5" />
-              <div>
-                <span className="font-medium text-white">Official Meta Model API Trial</span>
-                <p className="text-[10px] text-purple-300/80 leading-snug">
-                  1 trial per browser session with high-parameter cloud reasoning ({trialStatus?.model || 'meta-ai'}).
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
+      {/* Mode Context Notice */}
+      <div className="px-3 py-1.5 bg-[#101720]/60 dark:bg-[#101720]/60 bg-slate-50 border-b border-[#25332F]/60 text-[10px] font-mono text-[#96A6A3] flex items-center justify-between">
+        <span>
+          {mode === 'copilot'
+            ? `Active Project: ${project.name} (Rev ${project.revision})`
+            : 'General Electronics Q&A & Programming Help'}
+        </span>
+        <span className="text-emerald-400 flex items-center gap-1">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          Online
+        </span>
+      </div>
 
       {/* Quick Action Chips */}
-      <div className="px-3 py-2 border-b border-[#262631]/60 bg-[#0E0E12] flex items-center space-x-1.5 overflow-x-auto text-[11px] font-mono no-scrollbar">
-        <button
-          disabled={isMetaConsumed || isSubmitting}
-          onClick={() => handleInitiateSend('Add a red LED to the design')}
-          className="bg-[#15151B] hover:bg-[#262631] text-[#818CF8] px-2 py-1 rounded border border-[#262631] whitespace-nowrap transition-colors flex items-center gap-1 disabled:opacity-40"
-        >
-          <Zap className="w-3 h-3" />
-          <span>+ LED</span>
-        </button>
-        <button
-          disabled={isMetaConsumed || isSubmitting}
-          onClick={() => handleInitiateSend('Add a buzzer to the design')}
-          className="bg-[#15151B] hover:bg-[#262631] text-[#818CF8] px-2 py-1 rounded border border-[#262631] whitespace-nowrap transition-colors disabled:opacity-40"
-        >
-          + Buzzer
-        </button>
-        <button
-          disabled={isMetaConsumed || isSubmitting}
-          onClick={() => handleInitiateSend('Run DRC validation')}
-          className="bg-[#15151B] hover:bg-[#262631] text-emerald-400 px-2 py-1 rounded border border-[#262631] whitespace-nowrap transition-colors disabled:opacity-40"
-        >
-          Check DRC
-        </button>
+      <div className="px-3 py-2 border-b border-[#25332F]/60 bg-[#090D12] dark:bg-[#090D12] bg-white flex items-center space-x-1.5 overflow-x-auto text-[11px] font-mono no-scrollbar">
+        {mode === 'copilot' ? (
+          <>
+            <button
+              disabled={isSubmitting}
+              onClick={() => handleSend('Add a red LED to the design')}
+              className="bg-[#101720] hover:bg-[#151F2B] text-[#5B9B8D] px-2 py-1 rounded border border-[#25332F] whitespace-nowrap transition-colors flex items-center gap-1 disabled:opacity-40"
+            >
+              <Zap className="w-3 h-3" />
+              <span>+ LED</span>
+            </button>
+            <button
+              disabled={isSubmitting}
+              onClick={() => handleSend('Add an active buzzer to the design')}
+              className="bg-[#101720] hover:bg-[#151F2B] text-[#5B9B8D] px-2 py-1 rounded border border-[#25332F] whitespace-nowrap transition-colors disabled:opacity-40"
+            >
+              + Buzzer
+            </button>
+            <button
+              disabled={isSubmitting}
+              onClick={() => handleSend('Explain all active pin assignments and voltage rails')}
+              className="bg-[#101720] hover:bg-[#151F2B] text-slate-300 px-2 py-1 rounded border border-[#25332F] whitespace-nowrap transition-colors disabled:opacity-40"
+            >
+              Explain Pins
+            </button>
+            <button
+              disabled={isSubmitting}
+              onClick={() => handleSend('Check DRC findings and suggest fixes')}
+              className="bg-[#101720] hover:bg-[#151F2B] text-emerald-400 px-2 py-1 rounded border border-[#25332F] whitespace-nowrap transition-colors disabled:opacity-40"
+            >
+              Check DRC
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              disabled={isSubmitting}
+              onClick={() => handleSend('How does an I2C pull-up resistor work and why is 4.7kΩ standard?')}
+              className="bg-[#101720] hover:bg-[#151F2B] text-amber-300 px-2 py-1 rounded border border-[#25332F] whitespace-nowrap transition-colors disabled:opacity-40"
+            >
+              I2C Pull-Ups
+            </button>
+            <button
+              disabled={isSubmitting}
+              onClick={() => handleSend('What are ESP32 strapping pins and why must they be protected?')}
+              className="bg-[#101720] hover:bg-[#151F2B] text-amber-300 px-2 py-1 rounded border border-[#25332F] whitespace-nowrap transition-colors disabled:opacity-40"
+            >
+              Strapping Pins
+            </button>
+            <button
+              disabled={isSubmitting}
+              onClick={() => handleSend('How to calculate resistor values for an LED?')}
+              className="bg-[#101720] hover:bg-[#151F2B] text-amber-300 px-2 py-1 rounded border border-[#25332F] whitespace-nowrap transition-colors disabled:opacity-40"
+            >
+              LED Resistor Formula
+            </button>
+          </>
+        )}
       </div>
 
       {/* Messages Scroll Area */}
@@ -307,21 +239,21 @@ export const CopilotDrawer: React.FC<CopilotDrawerProps> = ({
             <div
               className={`max-w-[88%] rounded-lg p-3 text-xs leading-relaxed ${
                 m.sender === 'user'
-                  ? 'bg-[#4F46E5] text-white rounded-br-none shadow-md'
-                  : 'bg-[#15151B] border border-[#262631] text-[#FAFAFA] rounded-bl-none'
+                  ? 'bg-[#356B62] text-white rounded-br-none shadow-md'
+                  : 'bg-[#101720] dark:bg-[#101720] bg-slate-100 border border-[#25332F] dark:border-[#25332F] border-slate-300 text-[#F1F5F4] dark:text-[#F1F5F4] text-slate-800 rounded-bl-none'
               }`}
             >
               {m.sender === 'copilot' && (
-                <div className="flex items-center space-x-1.5 mb-1.5 pb-1 border-b border-[#262631]/80 text-[10px] font-mono text-zinc-400">
-                  {m.provider === 'meta' ? (
+                <div className="flex items-center space-x-1.5 mb-1.5 pb-1 border-b border-[#25332F]/80 text-[10px] font-mono text-[#96A6A3]">
+                  {m.mode === 'assistant' ? (
                     <>
-                      <Globe className="w-3 h-3 text-purple-400" />
-                      <span className="text-purple-300 font-medium">Meta Model API</span>
+                      <BookOpen className="w-3 h-3 text-amber-400" />
+                      <span className="text-amber-300 font-medium">Normal AI Assistant</span>
                     </>
                   ) : (
                     <>
-                      <Cpu className="w-3 h-3 text-emerald-400" />
-                      <span className="text-emerald-300 font-medium">Local AI (Ollama)</span>
+                      <Cpu className="w-3 h-3 text-[#5B9B8D]" />
+                      <span className="text-[#5B9B8D] font-medium">Engineering Copilot</span>
                     </>
                   )}
                 </div>
@@ -331,7 +263,7 @@ export const CopilotDrawer: React.FC<CopilotDrawerProps> = ({
 
               {/* Executed graph actions pills */}
               {m.actions && m.actions.length > 0 && (
-                <div className="mt-2 pt-2 border-t border-[#262631] space-y-1">
+                <div className="mt-2 pt-2 border-t border-[#25332F] space-y-1">
                   {m.actions.map((act, aIdx) => (
                     <div
                       key={aIdx}
@@ -345,28 +277,24 @@ export const CopilotDrawer: React.FC<CopilotDrawerProps> = ({
               )}
             </div>
 
-            <span className="text-[9px] text-zinc-500 font-mono mt-1 px-1">{m.timestamp}</span>
+            <span className="text-[9px] text-[#96A6A3] font-mono mt-1 px-1">{m.timestamp}</span>
           </div>
         ))}
 
         {isSubmitting && (
-          <div className="flex items-center space-x-2 text-xs font-mono text-[#A1A1AA] bg-[#15151B] border border-[#262631] p-2.5 rounded-lg w-fit">
-            <Sparkles className="w-3.5 h-3.5 text-[#818CF8] animate-spin" />
-            <span>
-              {provider === 'meta'
-                ? 'Querying Meta Model API...'
-                : 'Processing with Local Ollama...'}
-            </span>
+          <div className="flex items-center space-x-2 text-xs font-mono text-[#96A6A3] bg-[#101720] border border-[#25332F] p-2.5 rounded-lg w-fit">
+            <Sparkles className="w-3.5 h-3.5 text-[#5B9B8D] animate-spin" />
+            <span>Analyzing with Ollama (gpt-oss:120b-cloud)...</span>
           </div>
         )}
       </div>
 
       {/* Input bar */}
-      <div className="p-3 border-t border-[#262631] bg-[#15151B]">
+      <div className="p-3 border-t border-[#25332F] dark:border-[#25332F] border-slate-200 bg-[#101720] dark:bg-[#101720] bg-slate-50">
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            handleInitiateSend();
+            handleSend();
           }}
           className="flex items-center space-x-2"
         >
@@ -375,81 +303,23 @@ export const CopilotDrawer: React.FC<CopilotDrawerProps> = ({
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder={
-              isMetaConsumed
-                ? 'Trial consumed. Switch to Local AI to continue...'
-                : provider === 'meta'
-                ? 'Ask Meta AI Copilot (1 trial)...'
-                : 'Ask Local Copilot or propose a change...'
+              mode === 'copilot'
+                ? 'Ask Copilot or propose a circuit change...'
+                : 'Ask general electronics or coding question...'
             }
-            className="flex-1 bg-[#0E0E12] border border-[#262631] rounded-md px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#6366F1] font-sans disabled:opacity-50"
-            disabled={isSubmitting || (isMetaConsumed ?? false)}
+            className="flex-1 bg-[#090D12] dark:bg-[#090D12] bg-white border border-[#25332F] dark:border-[#25332F] border-slate-300 rounded-md px-3 py-2 text-xs text-[#F1F5F4] dark:text-[#F1F5F4] text-slate-900 placeholder-slate-500 focus:outline-none focus:border-[#5B9B8D] font-sans"
+            disabled={isSubmitting}
           />
           <button
             type="submit"
-            disabled={isSubmitting || !input.trim() || (isMetaConsumed ?? false)}
-            className={`p-2 rounded-md transition-colors disabled:opacity-40 text-white ${
-              provider === 'meta'
-                ? 'bg-purple-600 hover:bg-purple-500'
-                : 'bg-[#4F46E5] hover:bg-[#4338CA]'
-            }`}
-            title={provider === 'meta' ? 'Send with Meta AI' : 'Send with Local AI'}
+            disabled={isSubmitting || !input.trim()}
+            className="p-2 rounded-md transition-colors disabled:opacity-40 text-white bg-[#356B62] hover:bg-[#2D5E56]"
+            title="Send Message"
           >
             <Send className="w-3.5 h-3.5" />
           </button>
         </form>
       </div>
-
-      {/* Trial Confirmation Modal */}
-      {showConfirmModal && (
-        <div className="fixed inset-0 bg-black/75 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-[#15151B] border border-purple-500/40 rounded-xl max-w-sm w-full p-5 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-start space-x-3">
-              <div className="w-9 h-9 rounded-lg bg-purple-950/80 border border-purple-700/50 flex items-center justify-center text-purple-300 flex-shrink-0">
-                <Globe className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-sm font-semibold text-white font-mono">Use Meta AI Single Trial?</h3>
-                <p className="text-[11px] text-zinc-400 mt-1 leading-relaxed">
-                  This action consumes your <strong>single trial</strong> for official Meta Model API inference.
-                </p>
-              </div>
-            </div>
-
-            <div className="bg-[#0E0E12] border border-[#262631] p-3 rounded-lg text-[11px] text-zinc-300 space-y-2">
-              <div className="flex items-center space-x-2 text-purple-300 font-mono text-[10px]">
-                <ShieldCheck className="w-3.5 h-3.5" />
-                <span>Stateless Signed Browser Identity</span>
-              </div>
-              <p className="text-[10px] text-zinc-400">
-                Once consumed, subsequent requests can be routed without limits to your local Ollama engine.
-              </p>
-              <div className="pt-1.5 border-t border-[#262631] text-[11px] font-mono text-zinc-200">
-                <span className="text-zinc-500">Query: </span>"{pendingMessage}"
-              </div>
-            </div>
-
-            <div className="flex space-x-2 pt-1">
-              <button
-                type="button"
-                onClick={() => {
-                  setShowConfirmModal(false);
-                  setPendingMessage('');
-                }}
-                className="flex-1 px-3 py-2 bg-[#22222C] hover:bg-[#2A2A38] text-zinc-300 text-xs font-mono rounded-lg transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => executeSend(pendingMessage, 'meta')}
-                className="flex-1 px-3 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-mono font-medium rounded-lg shadow-lg shadow-purple-600/30 transition-all flex items-center justify-center space-x-1"
-              >
-                <span>Confirm & Send</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

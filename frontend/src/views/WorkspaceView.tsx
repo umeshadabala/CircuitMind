@@ -11,7 +11,6 @@ import {
   Plus,
   PanelRightClose,
   PanelRightOpen,
-  Sparkles,
 } from 'lucide-react';
 import { Project, CatalogComponent, SimulationArtifact } from '../types';
 import { CanvasPanel } from './panels/CanvasPanel';
@@ -121,24 +120,24 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
   ];
 
   return (
-    <div className="h-[calc(100vh-3.5rem)] flex flex-col bg-[#09090B] overflow-hidden">
+    <div className="h-[calc(100vh-3.5rem)] flex flex-col bg-[#090D12] dark:bg-[#090D12] bg-[#F8FAFC] overflow-hidden transition-colors">
       {/* Workspace Sub-Header Tab Bar */}
-      <div className="h-11 border-b border-[#2A2A35] bg-[#111116] px-4 flex items-center justify-between select-none z-20">
+      <div className="h-11 border-b border-[#25332F] dark:border-[#25332F] border-slate-200 bg-[#101720] dark:bg-[#101720] bg-white px-4 flex items-center justify-between select-none z-20 transition-colors">
         <nav className="flex items-center space-x-1 overflow-x-auto no-scrollbar font-mono text-xs">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md transition-colors whitespace-nowrap ${
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap ${
                 activeTab === tab.id
-                  ? 'bg-[#18181F] text-[#FAFAFA] border border-[#7C3AED]/40 shadow-sm'
-                  : 'text-[#A1A1AA] hover:text-[#FAFAFA] hover:bg-[#18181F]/50'
+                  ? 'bg-[#151F2B] dark:bg-[#151F2B] bg-slate-100 text-[#F1F5F4] dark:text-[#F1F5F4] text-slate-900 border border-[#356B62]/60 shadow-sm font-semibold'
+                  : 'text-[#96A6A3] dark:text-[#96A6A3] text-slate-600 hover:text-[#F1F5F4] dark:hover:text-[#F1F5F4] hover:text-slate-900 hover:bg-[#151F2B]/40 dark:hover:bg-[#151F2B]/40 hover:bg-slate-100'
               }`}
             >
               {tab.icon}
               <span>{tab.label}</span>
               {tab.badge !== undefined && (
-                <span className="text-[10px] font-bold bg-[#18181F] border border-[#2A2A35] text-zinc-300 px-1.5 py-0.2 rounded-full ml-1">
+                <span className="text-[10px] font-bold bg-[#101720] dark:bg-[#101720] bg-white border border-[#25332F] dark:border-[#25332F] border-slate-200 text-[#5B9B8D] px-1.5 py-0.2 rounded-full ml-1">
                   {tab.badge}
                 </span>
               )}
@@ -151,15 +150,15 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
             <>
               <button
                 onClick={() => setShowAddModal(true)}
-                className="flex items-center space-x-1 bg-[#18181F] hover:bg-[#2A2A35] border border-[#2A2A35] text-white px-2.5 py-1 rounded text-xs font-mono transition-colors"
+                className="flex items-center space-x-1 bg-[#151F2B] dark:bg-[#151F2B] bg-slate-100 hover:bg-[#1F2D3D] dark:hover:bg-[#1F2D3D] hover:bg-slate-200 border border-[#25332F] dark:border-[#25332F] border-slate-300 text-[#F1F5F4] dark:text-[#F1F5F4] text-slate-800 px-2.5 py-1 rounded-md text-xs font-mono transition-colors"
               >
-                <Plus className="w-3.5 h-3.5" />
+                <Plus className="w-3.5 h-3.5 text-[#5B9B8D]" />
                 <span className="hidden sm:inline">Add Part</span>
               </button>
 
               <button
                 onClick={() => setIsInspectorOpen(!isInspectorOpen)}
-                className="p-1 text-[#A1A1AA] hover:text-white rounded hover:bg-[#18181F]"
+                className="p-1 text-[#96A6A3] dark:text-[#96A6A3] text-slate-600 hover:text-[#F1F5F4] dark:hover:text-[#F1F5F4] hover:text-slate-900 rounded-md hover:bg-[#151F2B] dark:hover:bg-[#151F2B] hover:bg-slate-100 transition-colors"
                 title={isInspectorOpen ? 'Collapse inspector' : 'Open inspector'}
               >
                 {isInspectorOpen ? <PanelRightClose className="w-4 h-4" /> : <PanelRightOpen className="w-4 h-4" />}
@@ -229,7 +228,7 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
 
         {/* Collapsible Component Inspector (Canvas Tab only) */}
         {activeTab === 'canvas' && isInspectorOpen && (
-          <div className="w-80 h-full border-l border-[#2A2A35] bg-[#111116] z-10">
+          <div className="w-80 h-full border-l border-[#25332F] dark:border-[#25332F] border-slate-200 bg-[#101720] dark:bg-[#101720] bg-white z-10 transition-colors">
             <InspectorPanel
               component={selectedComponent}
               catalogPart={selectedCatalogPart}
@@ -255,10 +254,15 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
       {/* Add Component Catalog Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#111116] border border-[#2A2A35] rounded-xl max-w-lg w-full p-5 space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-[#2A2A35] pb-3">
-              <h3 className="font-mono text-sm font-bold text-white">Select Component from Catalog</h3>
-              <button onClick={() => setShowAddModal(false)} className="text-zinc-400 hover:text-white">
+          <div className="bg-[#101720] dark:bg-[#101720] bg-white border border-[#25332F] dark:border-[#25332F] border-slate-200 rounded-2xl max-w-lg w-full p-5 space-y-4 shadow-2xl transition-colors">
+            <div className="flex items-center justify-between border-b border-[#25332F] dark:border-[#25332F] border-slate-200 pb-3">
+              <h3 className="font-mono text-sm font-bold text-[#F1F5F4] dark:text-[#F1F5F4] text-slate-900">
+                Select Component from Catalog
+              </h3>
+              <button
+                onClick={() => setShowAddModal(false)}
+                className="text-[#96A6A3] hover:text-[#F1F5F4] dark:hover:text-[#F1F5F4] text-slate-500 hover:text-slate-900"
+              >
                 ✕
               </button>
             </div>
@@ -271,16 +275,16 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
                     await onAddComponent(item.catalog_id);
                     setShowAddModal(false);
                   }}
-                  className="bg-[#18181F] hover:bg-[#2A2A35] border border-[#2A2A35] p-3 rounded-lg cursor-pointer transition-colors space-y-1"
+                  className="bg-[#151F2B] dark:bg-[#151F2B] bg-slate-50 hover:border-[#356B62] border border-[#25332F] dark:border-[#25332F] border-slate-200 p-3 rounded-xl cursor-pointer transition-colors space-y-1 group"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-mono text-xs font-bold text-[#A78BFA]">{item.catalog_id}</span>
-                    <span className="text-[10px] uppercase text-zinc-400 bg-[#111116] px-1.5 py-0.5 rounded border border-[#2A2A35]">
+                    <span className="font-mono text-xs font-bold text-[#5B9B8D]">{item.catalog_id}</span>
+                    <span className="text-[10px] uppercase text-[#96A6A3] dark:text-[#96A6A3] text-slate-500 bg-[#101720] dark:bg-[#101720] bg-white px-2 py-0.5 rounded border border-[#25332F] dark:border-[#25332F] border-slate-200">
                       {item.category}
                     </span>
                   </div>
-                  <div className="text-xs text-white font-medium">{item.name}</div>
-                  <div className="text-[11px] text-[#A1A1AA] line-clamp-1">{item.description}</div>
+                  <div className="text-xs text-[#F1F5F4] dark:text-[#F1F5F4] text-slate-900 font-medium">{item.name}</div>
+                  <div className="text-[11px] text-[#96A6A3] dark:text-[#96A6A3] text-slate-600 line-clamp-1">{item.description}</div>
                 </div>
               ))}
             </div>
@@ -290,4 +294,3 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
     </div>
   );
 };
-

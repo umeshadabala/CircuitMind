@@ -183,24 +183,24 @@ export const NetlistPanel: React.FC<NetlistPanelProps> = ({
       case 'ANALOG':
         return 'bg-teal-950/40 text-teal-300 border-teal-800/50';
       default:
-        return 'bg-[#7C3AED]/20 text-[#A78BFA] border-[#7C3AED]/40';
+        return 'bg-[#356B62]/20 text-[#5B9B8D] border-[#356B62]/40';
     }
   };
 
   return (
-    <div className="h-full flex flex-col bg-[#09090B] text-[#FAFAFA]">
+    <div className="h-full flex flex-col bg-[#090D12] text-[#F1F5F4]">
       {/* Top Controls Bar */}
-      <div className="p-3.5 border-b border-[#2A2A35] bg-[#111116] flex items-center justify-between gap-3 flex-wrap z-10">
+      <div className="p-3.5 border-b border-[#25332F] bg-[#101720] flex items-center justify-between gap-3 flex-wrap z-10">
         <div className="flex items-center space-x-3">
-          <FileCode className="w-5 h-5 text-[#A78BFA]" />
+          <FileCode className="w-5 h-5 text-[#5B9B8D]" />
           <div>
             <h2 className="font-mono text-sm font-bold text-white flex items-center space-x-2">
               <span>Electrical Netlist</span>
-              <span className="text-[10px] px-2 py-0.5 rounded bg-[#18181F] text-[#A78BFA] border border-[#2A2A35]">
+              <span className="text-[10px] px-2 py-0.5 rounded bg-[#151F2B] text-[#5B9B8D] border border-[#25332F]">
                 {filteredNets.length} of {project.nets.length} Nets
               </span>
             </h2>
-            <div className="text-[11px] text-[#A1A1AA] font-mono">
+            <div className="text-[11px] text-[#96A6A3] font-mono">
               Interconnection matrix · Revision {project.revision}
             </div>
           </div>
@@ -208,11 +208,11 @@ export const NetlistPanel: React.FC<NetlistPanelProps> = ({
 
         {/* View Switcher & Action Buttons */}
         <div className="flex items-center space-x-2 flex-wrap gap-y-2">
-          <div className="bg-[#18181F] p-0.5 rounded border border-[#2A2A35] flex text-xs font-mono">
+          <div className="bg-[#151F2B] p-0.5 rounded border border-[#25332F] flex text-xs font-mono">
             <button
               onClick={() => setViewMode('table')}
               className={`px-3 py-1 rounded transition-colors ${
-                viewMode === 'table' ? 'bg-[#7C3AED] text-white font-bold' : 'text-[#A1A1AA] hover:text-white'
+                viewMode === 'table' ? 'bg-[#356B62] text-white font-bold' : 'text-[#96A6A3] hover:text-white'
               }`}
             >
               Interactive Table
@@ -220,7 +220,7 @@ export const NetlistPanel: React.FC<NetlistPanelProps> = ({
             <button
               onClick={() => setViewMode('kicad')}
               className={`px-3 py-1 rounded transition-colors ${
-                viewMode === 'kicad' ? 'bg-[#7C3AED] text-white font-bold' : 'text-[#A1A1AA] hover:text-white'
+                viewMode === 'kicad' ? 'bg-[#356B62] text-white font-bold' : 'text-[#96A6A3] hover:text-white'
               }`}
             >
               KiCad Netlist
@@ -230,7 +230,7 @@ export const NetlistPanel: React.FC<NetlistPanelProps> = ({
           <button
             onClick={handleExportCSV}
             title="Export netlist to CSV"
-            className="flex items-center space-x-1.5 bg-[#18181F] hover:bg-[#2A2A35] text-zinc-300 hover:text-white px-3 py-1 rounded text-xs font-mono border border-[#2A2A35] transition-colors"
+            className="flex items-center space-x-1.5 bg-[#151F2B] hover:bg-[#25332F] text-zinc-300 hover:text-white px-3 py-1 rounded text-xs font-mono border border-[#25332F] transition-colors"
           >
             <Download className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Export CSV</span>
@@ -238,7 +238,7 @@ export const NetlistPanel: React.FC<NetlistPanelProps> = ({
 
           <button
             onClick={handleCopy}
-            className="flex items-center space-x-1.5 bg-[#18181F] hover:bg-[#2A2A35] border border-[#2A2A35] text-[#FAFAFA] px-3 py-1 rounded text-xs font-mono transition-colors"
+            className="flex items-center space-x-1.5 bg-[#151F2B] hover:bg-[#25332F] border border-[#25332F] text-[#F1F5F4] px-3 py-1 rounded text-xs font-mono transition-colors"
           >
             {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
             <span>{copied ? 'Copied' : 'Copy Text'}</span>
@@ -248,29 +248,29 @@ export const NetlistPanel: React.FC<NetlistPanelProps> = ({
 
       {/* Filter and Search Bar (Table View) */}
       {viewMode === 'table' && (
-        <div className="px-4 py-2.5 border-b border-[#2A2A35] bg-[#111116]/60 flex items-center justify-between gap-3 flex-wrap">
+        <div className="px-4 py-2.5 border-b border-[#25332F] bg-[#101720]/60 flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center space-x-2 flex-1 min-w-[240px]">
             <div className="relative flex-1 max-w-md">
-              <Search className="w-3.5 h-3.5 text-[#A1A1AA] absolute left-2.5 top-2.5" />
+              <Search className="w-3.5 h-3.5 text-[#96A6A3] absolute left-2.5 top-2.5" />
               <input
                 type="text"
                 placeholder="Search by net name, component ref (e.g. U1, D1), or pin..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-[#18181F] border border-[#2A2A35] text-xs font-mono rounded pl-8 pr-3 py-1.5 text-white placeholder-zinc-500 focus:outline-none focus:border-[#7C3AED]"
+                className="w-full bg-[#151F2B] border border-[#25332F] text-xs font-mono rounded pl-8 pr-3 py-1.5 text-white placeholder-zinc-500 focus:outline-none focus:border-[#356B62]"
               />
             </div>
           </div>
 
           <div className="flex items-center space-x-2 font-mono text-xs">
-            <span className="text-[#A1A1AA] text-[11px] flex items-center space-x-1">
+            <span className="text-[#96A6A3] text-[11px] flex items-center space-x-1">
               <Filter className="w-3 h-3" />
               <span>Type:</span>
             </span>
             <select
               value={selectedTypeFilter}
               onChange={(e) => setSelectedTypeFilter(e.target.value)}
-              className="bg-[#18181F] border border-[#2A2A35] text-xs rounded px-2.5 py-1 text-zinc-200 focus:outline-none focus:border-[#7C3AED]"
+              className="bg-[#151F2B] border border-[#25332F] text-xs rounded px-2.5 py-1 text-zinc-200 focus:outline-none focus:border-[#356B62]"
             >
               <option value="ALL">All Types</option>
               <option value="POWER">POWER (VCC/VBAT)</option>
@@ -285,7 +285,7 @@ export const NetlistPanel: React.FC<NetlistPanelProps> = ({
             <select
               value={selectedStatusFilter}
               onChange={(e) => setSelectedStatusFilter(e.target.value)}
-              className="bg-[#18181F] border border-[#2A2A35] text-xs rounded px-2.5 py-1 text-zinc-200 focus:outline-none focus:border-[#7C3AED]"
+              className="bg-[#151F2B] border border-[#25332F] text-xs rounded px-2.5 py-1 text-zinc-200 focus:outline-none focus:border-[#356B62]"
             >
               <option value="ALL">All Statuses</option>
               <option value="CONNECTED">Connected (≥2 nodes)</option>
@@ -298,9 +298,9 @@ export const NetlistPanel: React.FC<NetlistPanelProps> = ({
       {/* Table Content */}
       <div className="flex-1 overflow-auto p-4">
         {viewMode === 'table' ? (
-          <div className="border border-[#2A2A35] rounded-lg overflow-hidden bg-[#111116]">
+          <div className="border border-[#25332F] rounded-lg overflow-hidden bg-[#101720]">
             <table className="w-full text-left font-mono text-xs">
-              <thead className="bg-[#18181F] border-b border-[#2A2A35] text-[#A1A1AA]">
+              <thead className="bg-[#151F2B] border-b border-[#25332F] text-[#96A6A3]">
                 <tr>
                   <th className="py-2.5 px-3 w-8"></th>
                   <th
@@ -352,10 +352,10 @@ export const NetlistPanel: React.FC<NetlistPanelProps> = ({
                   <th className="py-2.5 px-3 font-sans">Engineering Rationale</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#2A2A35]/50">
+              <tbody className="divide-y divide-[#25332F]/50">
                 {filteredNets.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="py-8 text-center text-[#A1A1AA] font-mono">
+                    <td colSpan={8} className="py-8 text-center text-[#96A6A3] font-mono">
                       No electrical nets match the selected filters.
                     </td>
                   </tr>
@@ -367,7 +367,7 @@ export const NetlistPanel: React.FC<NetlistPanelProps> = ({
                     return (
                       <React.Fragment key={net.net_id}>
                         <tr
-                          className={`hover:bg-[#18181F]/60 transition-colors ${
+                          className={`hover:bg-[#151F2B]/60 transition-colors ${
                             isFloating ? 'bg-amber-950/10' : ''
                           }`}
                         >
@@ -378,13 +378,13 @@ export const NetlistPanel: React.FC<NetlistPanelProps> = ({
                               title="Toggle detailed endpoint breakdown"
                             >
                               {isExpanded ? (
-                                <ChevronDown className="w-3.5 h-3.5 text-[#A78BFA]" />
+                                <ChevronDown className="w-3.5 h-3.5 text-[#5B9B8D]" />
                               ) : (
                                 <ChevronRight className="w-3.5 h-3.5" />
                               )}
                             </button>
                           </td>
-                          <td className="py-2 px-3 font-bold text-[#A78BFA]">
+                          <td className="py-2 px-3 font-bold text-[#5B9B8D]">
                             <button
                               onClick={() => onNavigateToNet && onNavigateToNet(net.net_id)}
                               className="hover:underline flex items-center space-x-1 text-left"
@@ -411,7 +411,7 @@ export const NetlistPanel: React.FC<NetlistPanelProps> = ({
                               {net.net_type}
                             </span>
                           </td>
-                          <td className="py-2 px-3 text-[#A1A1AA]">
+                          <td className="py-2 px-3 text-[#96A6A3]">
                             {net.voltage !== undefined && net.voltage !== null ? `${net.voltage}V` : '—'}
                           </td>
                           <td className="py-2 px-3 text-center">
@@ -419,7 +419,7 @@ export const NetlistPanel: React.FC<NetlistPanelProps> = ({
                               className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                                 isFloating
                                   ? 'bg-amber-950 text-amber-300 border border-amber-800'
-                                  : 'bg-[#18181F] text-zinc-300 border border-[#2A2A35]'
+                                  : 'bg-[#151F2B] text-zinc-300 border border-[#25332F]'
                               }`}
                             >
                               {net.pins.length}
@@ -431,7 +431,7 @@ export const NetlistPanel: React.FC<NetlistPanelProps> = ({
                                 <button
                                   key={`${p.instance_id}.${p.pin_id}`}
                                   onClick={() => onNavigateToComponent && onNavigateToComponent(p.instance_id)}
-                                  className="bg-[#18181F] hover:bg-[#2A2A35] hover:text-white px-2 py-0.5 rounded border border-[#2A2A35] text-[11px] text-[#A78BFA] transition-colors flex items-center space-x-1"
+                                  className="bg-[#151F2B] hover:bg-[#25332F] hover:text-white px-2 py-0.5 rounded border border-[#25332F] text-[11px] text-[#5B9B8D] transition-colors flex items-center space-x-1"
                                   title={`Navigate to ${p.instance_id} on canvas`}
                                 >
                                   <span>
@@ -441,14 +441,14 @@ export const NetlistPanel: React.FC<NetlistPanelProps> = ({
                               ))}
                             </div>
                           </td>
-                          <td className="py-2 px-3 text-[#A1A1AA] font-sans text-xs max-w-xs truncate">
+                          <td className="py-2 px-3 text-[#96A6A3] font-sans text-xs max-w-xs truncate">
                             {net.rationale || '—'}
                           </td>
                         </tr>
 
                         {/* Expanded Node Detail Row */}
                         {isExpanded && (
-                          <tr className="bg-[#18181F]/40 border-b border-[#2A2A35]/60">
+                          <tr className="bg-[#151F2B]/40 border-b border-[#25332F]/60">
                             <td colSpan={8} className="p-3 pl-10">
                               <div className="space-y-2 text-xs">
                                 <div className="font-semibold text-zinc-400 font-sans text-[11px] uppercase tracking-wider">
@@ -460,11 +460,11 @@ export const NetlistPanel: React.FC<NetlistPanelProps> = ({
                                     return (
                                       <div
                                         key={`${p.instance_id}.${p.pin_id}`}
-                                        className="bg-[#111116] border border-[#2A2A35] p-2.5 rounded flex items-start justify-between"
+                                        className="bg-[#101720] border border-[#25332F] p-2.5 rounded flex items-start justify-between"
                                       >
                                         <div>
                                           <div className="flex items-center space-x-1.5">
-                                            <span className="font-bold text-[#A78BFA]">{p.instance_id}</span>
+                                            <span className="font-bold text-[#5B9B8D]">{p.instance_id}</span>
                                             <span className="text-zinc-500">·</span>
                                             <span className="font-mono text-white">{p.pin_id}</span>
                                           </div>
@@ -474,7 +474,7 @@ export const NetlistPanel: React.FC<NetlistPanelProps> = ({
                                         </div>
                                         <button
                                           onClick={() => onNavigateToComponent && onNavigateToComponent(p.instance_id)}
-                                          className="text-[10px] text-[#A78BFA] hover:text-white bg-[#18181F] hover:bg-[#2A2A35] px-2 py-1 rounded border border-[#2A2A35] transition-colors flex items-center space-x-1"
+                                          className="text-[10px] text-[#5B9B8D] hover:text-white bg-[#151F2B] hover:bg-[#25332F] px-2 py-1 rounded border border-[#25332F] transition-colors flex items-center space-x-1"
                                         >
                                           <span>Inspect</span>
                                           <ExternalLink className="w-2.5 h-2.5" />
@@ -495,7 +495,7 @@ export const NetlistPanel: React.FC<NetlistPanelProps> = ({
             </table>
           </div>
         ) : (
-          <pre className="p-4 bg-[#111116] border border-[#2A2A35] rounded-lg font-mono text-xs text-[#FAFAFA] leading-relaxed overflow-x-auto selection:bg-[#7C3AED]">
+          <pre className="p-4 bg-[#101720] border border-[#25332F] rounded-lg font-mono text-xs text-[#F1F5F4] leading-relaxed overflow-x-auto selection:bg-[#356B62]">
             {kicadText}
           </pre>
         )}

@@ -135,7 +135,7 @@ class WokwiSimulationAdapter(SimulationAdapter):
 
         return {
             "version": 1,
-            "author": "CircuitMind 2.0",
+            "author": "CircuitMind",
             "editor": "wokwi",
             "parts": parts,
             "connections": connections,

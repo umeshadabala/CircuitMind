@@ -181,7 +181,7 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#09090B] text-[#FAFAFA] flex flex-col">
+    <div className="min-h-screen bg-[#090D12] dark:bg-[#090D12] bg-[#F8FAFC] text-[#F1F5F4] dark:text-[#F1F5F4] text-slate-900 flex flex-col transition-colors">
       <Header
         project={activeProject}
         health={health}
@@ -189,6 +189,11 @@ export const App: React.FC = () => {
         currentView={view}
         onOpenCopilot={view === 'workspace' ? () => setIsCopilotOpen(!isCopilotOpen) : undefined}
         isCopilotOpen={isCopilotOpen}
+        onStartNew={() => {
+          setInitialPrompt('');
+          setInitialName('My ESP32 Project');
+          setView('new-project');
+        }}
       />
 
       {/* Global Error Banner */}

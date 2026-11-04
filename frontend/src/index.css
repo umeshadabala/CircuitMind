@@ -3,49 +3,96 @@
 @tailwind utilities;
 
 :root {
-  --bg-primary: #09090B;
-  --bg-surface: #111116;
-  --bg-elevated: #18181F;
-  --border-color: #2A2A35;
-  --accent-violet: #7C3AED;
-  --accent-highlight: #A78BFA;
-  --text-main: #FAFAFA;
-  --text-muted: #A1A1AA;
+  --bg-primary: #F8FAFC;
+  --bg-surface: #FFFFFF;
+  --bg-elevated: #F1F5F9;
+  --border-color: #E2E8F0;
+  --border-subtle: #CBD5E1;
+  --accent-primary: #2D5E56;
+  --accent-secondary: #427B70;
+  --accent-glow: rgba(45, 94, 86, 0.12);
+  --text-main: #0F172A;
+  --text-muted: #64748B;
+  --card-bg: #FFFFFF;
+}
+
+html.dark {
+  --bg-primary: #090D12;
+  --bg-surface: #101720;
+  --bg-elevated: #151F2B;
+  --border-color: #25332F;
+  --border-subtle: #1C2724;
+  --accent-primary: #356B62;
+  --accent-secondary: #5B9B8D;
+  --accent-glow: rgba(91, 155, 141, 0.15);
+  --text-main: #F1F5F4;
+  --text-muted: #96A6A3;
+  --card-bg: #101720;
 }
 
 body {
   margin: 0;
   background-color: var(--bg-primary);
   color: var(--text-main);
-  background-image: 
-    radial-gradient(circle at 50% 0%, rgba(124, 58, 237, 0.08) 0%, transparent 60%),
-    linear-gradient(to right, rgba(42, 42, 53, 0.15) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(42, 42, 53, 0.15) 1px, transparent 1px);
-  background-size: 100% 100%, 24px 24px, 24px 24px;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-/* Custom scrollbar */
+html.dark body {
+  background-image: 
+    radial-gradient(circle at 50% 0%, rgba(53, 107, 98, 0.12) 0%, transparent 65%),
+    linear-gradient(to right, rgba(37, 51, 47, 0.2) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(37, 51, 47, 0.2) 1px, transparent 1px);
+  background-size: 100% 100%, 28px 28px, 28px 28px;
+}
+
+html:not(.dark) body {
+  background-image: 
+    radial-gradient(circle at 50% 0%, rgba(45, 94, 86, 0.05) 0%, transparent 65%),
+    linear-gradient(to right, rgba(226, 232, 240, 0.6) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(226, 232, 240, 0.6) 1px, transparent 1px);
+  background-size: 100% 100%, 28px 28px, 28px 28px;
+}
+
+/* Custom scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
-::-webkit-scrollbar-track {
-  background: #111116;
+html.dark ::-webkit-scrollbar-track {
+  background: #090D12;
 }
 
-::-webkit-scrollbar-thumb {
-  background: #2A2A35;
+html.dark ::-webkit-scrollbar-thumb {
+  background: #25332F;
   border-radius: 3px;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #7C3AED;
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: #5B9B8D;
+}
+
+html:not(.dark) ::-webkit-scrollbar-track {
+  background: #F8FAFC;
+}
+
+html:not(.dark) ::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 3px;
+}
+
+html:not(.dark) ::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
 }
 
 /* React Flow styling overrides */
-.react-flow__background {
-  background-color: #0d0d12 !important;
+html.dark .react-flow__background {
+  background-color: #090D12 !important;
+}
+
+html:not(.dark) .react-flow__background {
+  background-color: #F8FAFC !important;
 }
 
 .react-flow__node {
@@ -56,7 +103,6 @@ body {
   width: 8px;
   height: 8px;
   border-radius: 4px;
-  background-color: #7C3AED;
-  border: 2px solid #111116;
+  background-color: #5B9B8D;
+  border: 2px solid #101720;
 }
-

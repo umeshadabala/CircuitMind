@@ -195,19 +195,19 @@ export const BomPanel: React.FC<BomPanelProps> = ({
   };
 
   return (
-    <div className="h-full flex flex-col bg-[#09090B] text-[#FAFAFA]">
+    <div className="h-full flex flex-col bg-[#090D12] text-[#F1F5F4]">
       {/* Top Header Controls */}
-      <div className="p-3.5 border-b border-[#2A2A35] bg-[#111116] flex items-center justify-between gap-3 flex-wrap z-10">
+      <div className="p-3.5 border-b border-[#25332F] bg-[#101720] flex items-center justify-between gap-3 flex-wrap z-10">
         <div className="flex items-center space-x-3">
-          <Package className="w-5 h-5 text-[#A78BFA]" />
+          <Package className="w-5 h-5 text-[#5B9B8D]" />
           <div>
             <h2 className="font-mono text-sm font-bold text-white flex items-center space-x-2">
               <span>Bill of Materials (BOM)</span>
-              <span className="text-[10px] px-2 py-0.5 rounded bg-[#18181F] text-[#A78BFA] border border-[#2A2A35]">
+              <span className="text-[10px] px-2 py-0.5 rounded bg-[#151F2B] text-[#5B9B8D] border border-[#25332F]">
                 {project.components.length} parts ({filteredItems.length} unique)
               </span>
             </h2>
-            <div className="text-[11px] text-[#A1A1AA] font-mono">
+            <div className="text-[11px] text-[#96A6A3] font-mono">
               Sourcing & Part Inventory · Revision {project.revision}
             </div>
           </div>
@@ -218,7 +218,7 @@ export const BomPanel: React.FC<BomPanelProps> = ({
           <button
             onClick={handleExportCSV}
             title="Download BOM as CSV"
-            className="flex items-center space-x-1.5 bg-[#18181F] hover:bg-[#2A2A35] text-zinc-300 hover:text-white px-3 py-1.5 rounded text-xs font-mono border border-[#2A2A35] transition-colors"
+            className="flex items-center space-x-1.5 bg-[#151F2B] hover:bg-[#25332F] text-zinc-300 hover:text-white px-3 py-1.5 rounded text-xs font-mono border border-[#25332F] transition-colors"
           >
             <Download className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Export CSV</span>
@@ -227,7 +227,7 @@ export const BomPanel: React.FC<BomPanelProps> = ({
           <button
             onClick={handlePrint}
             title="Print or export clean BOM"
-            className="flex items-center space-x-1.5 bg-[#7C3AED]/20 hover:bg-[#7C3AED]/30 text-[#A78BFA] px-3 py-1.5 rounded text-xs font-mono border border-[#7C3AED]/40 transition-colors"
+            className="flex items-center space-x-1.5 bg-[#356B62]/20 hover:bg-[#356B62]/30 text-[#5B9B8D] px-3 py-1.5 rounded text-xs font-mono border border-[#356B62]/40 transition-colors"
           >
             <Printer className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Print BOM</span>
@@ -236,29 +236,29 @@ export const BomPanel: React.FC<BomPanelProps> = ({
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="px-4 py-2.5 border-b border-[#2A2A35] bg-[#111116]/60 flex items-center justify-between gap-3 flex-wrap">
+      <div className="px-4 py-2.5 border-b border-[#25332F] bg-[#101720]/60 flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center space-x-2 flex-1 min-w-[240px]">
           <div className="relative flex-1 max-w-md">
-            <Search className="w-3.5 h-3.5 text-[#A1A1AA] absolute left-2.5 top-2.5" />
+            <Search className="w-3.5 h-3.5 text-[#96A6A3] absolute left-2.5 top-2.5" />
             <input
               type="text"
               placeholder="Search by part name, ID, designator (e.g. U1, R1)..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-[#18181F] border border-[#2A2A35] text-xs font-mono rounded pl-8 pr-3 py-1.5 text-white placeholder-zinc-500 focus:outline-none focus:border-[#7C3AED]"
+              className="w-full bg-[#151F2B] border border-[#25332F] text-xs font-mono rounded pl-8 pr-3 py-1.5 text-white placeholder-zinc-500 focus:outline-none focus:border-[#356B62]"
             />
           </div>
         </div>
 
         <div className="flex items-center space-x-2 font-mono text-xs">
-          <span className="text-[#A1A1AA] text-[11px] flex items-center space-x-1">
+          <span className="text-[#96A6A3] text-[11px] flex items-center space-x-1">
             <Filter className="w-3 h-3" />
             <span>Category:</span>
           </span>
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="bg-[#18181F] border border-[#2A2A35] text-xs rounded px-2.5 py-1 text-zinc-200 focus:outline-none focus:border-[#7C3AED]"
+            className="bg-[#151F2B] border border-[#25332F] text-xs rounded px-2.5 py-1 text-zinc-200 focus:outline-none focus:border-[#356B62]"
           >
             {categories.map((cat) => (
               <option key={cat} value={cat}>
@@ -271,9 +271,9 @@ export const BomPanel: React.FC<BomPanelProps> = ({
 
       {/* Interactive Table Content */}
       <div className="flex-1 overflow-auto p-4">
-        <div className="border border-[#2A2A35] rounded-lg overflow-hidden bg-[#111116] print:border-none print:bg-white print:text-black">
+        <div className="border border-[#25332F] rounded-lg overflow-hidden bg-[#101720] print:border-none print:bg-white print:text-black">
           <table className="w-full text-left font-mono text-xs">
-            <thead className="bg-[#18181F] border-b border-[#2A2A35] text-[#A1A1AA] print:bg-gray-100 print:text-black">
+            <thead className="bg-[#151F2B] border-b border-[#25332F] text-[#96A6A3] print:bg-gray-100 print:text-black">
               <tr>
                 <th className="py-2.5 px-3 w-8"></th>
                 <th
@@ -309,10 +309,10 @@ export const BomPanel: React.FC<BomPanelProps> = ({
                 <th className="py-2.5 px-3 text-right">Datasheet</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#2A2A35]/50 print:divide-gray-200">
+            <tbody className="divide-y divide-[#25332F]/50 print:divide-gray-200">
               {filteredItems.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-8 text-center text-[#A1A1AA] font-mono">
+                  <td colSpan={8} className="py-8 text-center text-[#96A6A3] font-mono">
                     No components match the selected query.
                   </td>
                 </tr>
@@ -322,7 +322,7 @@ export const BomPanel: React.FC<BomPanelProps> = ({
 
                   return (
                     <React.Fragment key={item.catalogId}>
-                      <tr className="hover:bg-[#18181F]/40 transition-colors">
+                      <tr className="hover:bg-[#151F2B]/40 transition-colors">
                         <td className="py-2.5 px-2 text-center">
                           <button
                             onClick={() => toggleExpand(item.catalogId)}
@@ -330,16 +330,16 @@ export const BomPanel: React.FC<BomPanelProps> = ({
                             title="Expand instances"
                           >
                             {isExpanded ? (
-                              <ChevronDown className="w-3.5 h-3.5 text-[#A78BFA]" />
+                              <ChevronDown className="w-3.5 h-3.5 text-[#5B9B8D]" />
                             ) : (
                               <ChevronRight className="w-3.5 h-3.5" />
                             )}
                           </button>
                         </td>
-                        <td className="py-2.5 px-3 font-bold text-[#A78BFA]">{item.catalogId}</td>
+                        <td className="py-2.5 px-3 font-bold text-[#5B9B8D]">{item.catalogId}</td>
                         <td className="py-2.5 px-3">
                           <div className="text-white font-sans font-medium">{item.name}</div>
-                          <div className="flex items-center space-x-2 text-[10px] text-[#A1A1AA] mt-0.5 font-mono">
+                          <div className="flex items-center space-x-2 text-[10px] text-[#96A6A3] mt-0.5 font-mono">
                             <span className="uppercase text-purple-400">{item.category}</span>
                             <span>·</span>
                             <span>{item.valueRating}</span>
@@ -356,7 +356,7 @@ export const BomPanel: React.FC<BomPanelProps> = ({
                               <button
                                 key={d}
                                 onClick={() => onNavigateToComponent && onNavigateToComponent(d)}
-                                className="bg-[#18181F] hover:bg-[#2A2A35] text-[#A78BFA] hover:text-white border border-[#2A2A35] px-2 py-0.5 rounded text-[11px] font-mono transition-colors flex items-center space-x-1"
+                                className="bg-[#151F2B] hover:bg-[#25332F] text-[#5B9B8D] hover:text-white border border-[#25332F] px-2 py-0.5 rounded text-[11px] font-mono transition-colors flex items-center space-x-1"
                                 title={`Select ${d} on Circuit Canvas`}
                               >
                                 <span>{d}</span>
@@ -387,7 +387,7 @@ export const BomPanel: React.FC<BomPanelProps> = ({
                               href={item.datasheetUrl}
                               target="_blank"
                               rel="noreferrer"
-                              className="inline-flex items-center space-x-1 text-[#A78BFA] hover:text-white transition-colors"
+                              className="inline-flex items-center space-x-1 text-[#5B9B8D] hover:text-white transition-colors"
                             >
                               <span>PDF</span>
                               <ExternalLink className="w-3 h-3" />
@@ -400,7 +400,7 @@ export const BomPanel: React.FC<BomPanelProps> = ({
 
                       {/* Expandable Instances Row */}
                       {isExpanded && (
-                        <tr className="bg-[#18181F]/40 border-b border-[#2A2A35]/60">
+                        <tr className="bg-[#151F2B]/40 border-b border-[#25332F]/60">
                           <td colSpan={8} className="p-3 pl-10">
                             <div className="space-y-2">
                               <div className="font-semibold text-zinc-400 font-sans text-[11px] uppercase tracking-wider">
@@ -410,10 +410,10 @@ export const BomPanel: React.FC<BomPanelProps> = ({
                                 {item.instances.map((inst: any) => (
                                   <div
                                     key={inst.instance_id}
-                                    className="bg-[#111116] border border-[#2A2A35] p-2.5 rounded flex items-center justify-between"
+                                    className="bg-[#101720] border border-[#25332F] p-2.5 rounded flex items-center justify-between"
                                   >
                                     <div>
-                                      <div className="font-bold text-[#A78BFA]">{inst.instance_id}</div>
+                                      <div className="font-bold text-[#5B9B8D]">{inst.instance_id}</div>
                                       <div className="text-[11px] text-zinc-400 font-sans truncate max-w-[160px]">
                                         {inst.name}
                                       </div>
@@ -423,7 +423,7 @@ export const BomPanel: React.FC<BomPanelProps> = ({
                                     </div>
                                     <button
                                       onClick={() => onNavigateToComponent && onNavigateToComponent(inst.instance_id)}
-                                      className="text-[10px] text-[#A78BFA] hover:text-white bg-[#18181F] hover:bg-[#2A2A35] px-2 py-1 rounded border border-[#2A2A35] transition-colors flex items-center space-x-1"
+                                      className="text-[10px] text-[#5B9B8D] hover:text-white bg-[#151F2B] hover:bg-[#25332F] px-2 py-1 rounded border border-[#25332F] transition-colors flex items-center space-x-1"
                                     >
                                       <span>Select on Canvas</span>
                                       <ExternalLink className="w-2.5 h-2.5" />

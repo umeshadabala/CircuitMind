@@ -77,7 +77,7 @@ export const AssemblyGuidePanel: React.FC<AssemblyGuidePanelProps> = ({ project 
         return (
           <code
             key={idx}
-            className="px-1.5 py-0.5 rounded bg-[#18181F] border border-[#2A2A35] font-mono text-[11px] text-[#A78BFA]"
+            className="px-1.5 py-0.5 rounded bg-[#151F2B] border border-[#25332F] font-mono text-[11px] text-[#5B9B8D]"
           >
             {codeText}
           </code>
@@ -97,7 +97,7 @@ export const AssemblyGuidePanel: React.FC<AssemblyGuidePanelProps> = ({ project 
   const renderStructuredMarkdown = () => {
     if (!guideMarkdown) {
       return (
-        <div className="p-8 text-center text-[#A1A1AA] font-mono">
+        <div className="p-8 text-center text-[#96A6A3] font-mono">
           No assembly guide generated yet for this revision. Synthesize the project to generate instructions.
         </div>
       );
@@ -115,9 +115,9 @@ export const AssemblyGuidePanel: React.FC<AssemblyGuidePanelProps> = ({ project 
     const flushTable = (key: string) => {
       if (tableHeader.length > 0) {
         elements.push(
-          <div key={key} className="my-4 border border-[#2A2A35] rounded-lg overflow-x-auto bg-[#111116]">
+          <div key={key} className="my-4 border border-[#25332F] rounded-lg overflow-x-auto bg-[#101720]">
             <table className="w-full text-left font-mono text-xs">
-              <thead className="bg-[#18181F] border-b border-[#2A2A35] text-[#A1A1AA]">
+              <thead className="bg-[#151F2B] border-b border-[#25332F] text-[#96A6A3]">
                 <tr>
                   {tableHeader.map((h, i) => (
                     <th key={i} className="py-2.5 px-3 whitespace-nowrap font-semibold">
@@ -126,9 +126,9 @@ export const AssemblyGuidePanel: React.FC<AssemblyGuidePanelProps> = ({ project 
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#2A2A35]/50">
+              <tbody className="divide-y divide-[#25332F]/50">
                 {tableRows.map((row, rIdx) => (
-                  <tr key={rIdx} className="hover:bg-[#18181F]/40 transition-colors">
+                  <tr key={rIdx} className="hover:bg-[#151F2B]/40 transition-colors">
                     {row.map((cell, cIdx) => (
                       <td key={cIdx} className="py-2 px-3 text-zinc-300 font-sans text-xs">
                         {renderInline(cell.trim())}
@@ -153,8 +153,8 @@ export const AssemblyGuidePanel: React.FC<AssemblyGuidePanelProps> = ({ project 
         icon = <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0" />;
         borderStyle = 'border-amber-800/60 bg-amber-950/20 text-amber-200';
       } else if (calloutType === 'IMPORTANT') {
-        icon = <ShieldAlert className="w-4 h-4 text-[#A78BFA] flex-shrink-0" />;
-        borderStyle = 'border-[#7C3AED]/50 bg-[#7C3AED]/10 text-purple-200';
+        icon = <ShieldAlert className="w-4 h-4 text-[#5B9B8D] flex-shrink-0" />;
+        borderStyle = 'border-[#356B62]/50 bg-[#356B62]/10 text-purple-200';
       }
 
       elements.push(
@@ -216,7 +216,7 @@ export const AssemblyGuidePanel: React.FC<AssemblyGuidePanelProps> = ({ project 
       // Headers
       if (line.startsWith('# ')) {
         elements.push(
-          <h1 key={i} className="text-xl font-bold font-mono text-white tracking-tight pb-2 border-b border-[#2A2A35]">
+          <h1 key={i} className="text-xl font-bold font-mono text-white tracking-tight pb-2 border-b border-[#25332F]">
             {renderInline(line.slice(2))}
           </h1>
         );
@@ -231,8 +231,8 @@ export const AssemblyGuidePanel: React.FC<AssemblyGuidePanelProps> = ({ project 
           .replace(/\s+/g, '-');
         elements.push(
           <div key={i} id={id} className="pt-6 scroll-mt-6">
-            <h2 className="text-base font-bold font-mono text-white flex items-center space-x-2 pb-1.5 border-b border-[#2A2A35]/60">
-              <span className="w-2 h-2 rounded-full bg-[#7C3AED]" />
+            <h2 className="text-base font-bold font-mono text-white flex items-center space-x-2 pb-1.5 border-b border-[#25332F]/60">
+              <span className="w-2 h-2 rounded-full bg-[#356B62]" />
               <span>{renderInline(title)}</span>
             </h2>
           </div>
@@ -242,7 +242,7 @@ export const AssemblyGuidePanel: React.FC<AssemblyGuidePanelProps> = ({ project 
 
       if (line.startsWith('### ')) {
         elements.push(
-          <h3 key={i} className="text-sm font-semibold font-mono text-[#A78BFA] pt-3 pb-1">
+          <h3 key={i} className="text-sm font-semibold font-mono text-[#5B9B8D] pt-3 pb-1">
             {renderInline(line.slice(4))}
           </h3>
         );
@@ -251,7 +251,7 @@ export const AssemblyGuidePanel: React.FC<AssemblyGuidePanelProps> = ({ project 
 
       // Horizontal separator
       if (line.trim() === '---') {
-        elements.push(<hr key={i} className="border-[#2A2A35] my-4" />);
+        elements.push(<hr key={i} className="border-[#25332F] my-4" />);
         continue;
       }
 
@@ -274,7 +274,7 @@ export const AssemblyGuidePanel: React.FC<AssemblyGuidePanelProps> = ({ project 
       if (line.trim().startsWith('- ') || line.trim().startsWith('* ')) {
         elements.push(
           <div key={i} className="flex items-start space-x-2 text-xs text-zinc-300 py-0.5 font-sans pl-2">
-            <span className="text-[#A78BFA] font-bold">•</span>
+            <span className="text-[#5B9B8D] font-bold">•</span>
             <span className="leading-relaxed">{renderInline(line.trim().slice(2))}</span>
           </div>
         );
@@ -286,7 +286,7 @@ export const AssemblyGuidePanel: React.FC<AssemblyGuidePanelProps> = ({ project 
       if (numMatch) {
         elements.push(
           <div key={i} className="flex items-start space-x-2 text-xs text-zinc-300 py-1 font-sans pl-1">
-            <span className="font-mono text-[#A78BFA] font-bold text-[11px] min-w-[20px]">{numMatch[1]}.</span>
+            <span className="font-mono text-[#5B9B8D] font-bold text-[11px] min-w-[20px]">{numMatch[1]}.</span>
             <span className="leading-relaxed">{renderInline(numMatch[2])}</span>
           </div>
         );
@@ -310,19 +310,19 @@ export const AssemblyGuidePanel: React.FC<AssemblyGuidePanelProps> = ({ project 
   };
 
   return (
-    <div className="h-full flex flex-col bg-[#09090B] text-[#FAFAFA]">
+    <div className="h-full flex flex-col bg-[#090D12] text-[#F1F5F4]">
       {/* Top Header & Toolbar */}
-      <div className="p-3.5 border-b border-[#2A2A35] bg-[#111116] flex items-center justify-between gap-3 z-10 flex-wrap">
+      <div className="p-3.5 border-b border-[#25332F] bg-[#101720] flex items-center justify-between gap-3 z-10 flex-wrap">
         <div className="flex items-center space-x-3">
-          <Wrench className="w-5 h-5 text-[#A78BFA]" />
+          <Wrench className="w-5 h-5 text-[#5B9B8D]" />
           <div>
             <h2 className="font-mono text-sm font-bold text-white flex items-center space-x-2">
               <span>Assembly & Testing Guide</span>
-              <span className="text-[10px] px-2 py-0.5 rounded bg-[#18181F] text-[#A78BFA] border border-[#2A2A35]">
+              <span className="text-[10px] px-2 py-0.5 rounded bg-[#151F2B] text-[#5B9B8D] border border-[#25332F]">
                 Rev {project.revision}
               </span>
             </h2>
-            <div className="text-[11px] text-[#A1A1AA] font-mono">
+            <div className="text-[11px] text-[#96A6A3] font-mono">
               Target: `{project.target_board}` · Derived from canonical project graph
             </div>
           </div>
@@ -331,20 +331,20 @@ export const AssemblyGuidePanel: React.FC<AssemblyGuidePanelProps> = ({ project 
         {/* Action Controls */}
         <div className="flex items-center space-x-2">
           <div className="relative">
-            <Search className="w-3.5 h-3.5 text-[#A1A1AA] absolute left-2.5 top-2.5" />
+            <Search className="w-3.5 h-3.5 text-[#96A6A3] absolute left-2.5 top-2.5" />
             <input
               type="text"
               placeholder="Search guide..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-[#18181F] border border-[#2A2A35] text-xs font-mono rounded pl-8 pr-3 py-1.5 text-white placeholder-zinc-500 focus:outline-none focus:border-[#7C3AED] w-40 sm:w-56"
+              className="bg-[#151F2B] border border-[#25332F] text-xs font-mono rounded pl-8 pr-3 py-1.5 text-white placeholder-zinc-500 focus:outline-none focus:border-[#356B62] w-40 sm:w-56"
             />
           </div>
 
           <button
             onClick={handleDownload}
             title="Download full Markdown document"
-            className="flex items-center space-x-1.5 bg-[#18181F] hover:bg-[#2A2A35] text-zinc-300 hover:text-white px-3 py-1.5 rounded text-xs font-mono border border-[#2A2A35] transition-colors"
+            className="flex items-center space-x-1.5 bg-[#151F2B] hover:bg-[#25332F] text-zinc-300 hover:text-white px-3 py-1.5 rounded text-xs font-mono border border-[#25332F] transition-colors"
           >
             <Download className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Download .MD</span>
@@ -353,7 +353,7 @@ export const AssemblyGuidePanel: React.FC<AssemblyGuidePanelProps> = ({ project 
           <button
             onClick={handlePrint}
             title="Print or export as PDF"
-            className="flex items-center space-x-1.5 bg-[#7C3AED]/20 hover:bg-[#7C3AED]/30 text-[#A78BFA] px-3 py-1.5 rounded text-xs font-mono border border-[#7C3AED]/40 transition-colors"
+            className="flex items-center space-x-1.5 bg-[#356B62]/20 hover:bg-[#356B62]/30 text-[#5B9B8D] px-3 py-1.5 rounded text-xs font-mono border border-[#356B62]/40 transition-colors"
           >
             <Printer className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Print Guide</span>
@@ -364,9 +364,9 @@ export const AssemblyGuidePanel: React.FC<AssemblyGuidePanelProps> = ({ project 
       {/* Main Content Layout with Sticky TOC Sidebar */}
       <div className="flex-1 overflow-hidden flex">
         {/* Table of Contents Sidebar */}
-        <div className="hidden lg:block w-72 h-full border-r border-[#2A2A35] bg-[#111116]/60 p-4 overflow-y-auto font-mono text-xs">
-          <div className="flex items-center space-x-2 text-[#A1A1AA] uppercase tracking-wider text-[11px] font-bold mb-3">
-            <BookOpen className="w-3.5 h-3.5 text-[#A78BFA]" />
+        <div className="hidden lg:block w-72 h-full border-r border-[#25332F] bg-[#101720]/60 p-4 overflow-y-auto font-mono text-xs">
+          <div className="flex items-center space-x-2 text-[#96A6A3] uppercase tracking-wider text-[11px] font-bold mb-3">
+            <BookOpen className="w-3.5 h-3.5 text-[#5B9B8D]" />
             <span>Contents</span>
           </div>
           <div className="space-y-1">
@@ -376,8 +376,8 @@ export const AssemblyGuidePanel: React.FC<AssemblyGuidePanelProps> = ({ project 
                 onClick={() => scrollToHeading(item.id)}
                 className={`w-full text-left py-1 px-2 rounded transition-colors text-[11px] truncate flex items-center space-x-1.5 ${
                   activeSection === item.id
-                    ? 'bg-[#18181F] text-[#A78BFA] font-bold border-l-2 border-[#7C3AED]'
-                    : 'text-[#A1A1AA] hover:text-white hover:bg-[#18181F]/40'
+                    ? 'bg-[#151F2B] text-[#5B9B8D] font-bold border-l-2 border-[#356B62]'
+                    : 'text-[#96A6A3] hover:text-white hover:bg-[#151F2B]/40'
                 }`}
               >
                 <ChevronRight className="w-3 h-3 text-zinc-600 flex-shrink-0" />
@@ -389,7 +389,7 @@ export const AssemblyGuidePanel: React.FC<AssemblyGuidePanelProps> = ({ project 
 
         {/* Scrollable Document Body */}
         <div className="flex-1 h-full overflow-y-auto p-6 lg:p-8 max-w-4xl mx-auto w-full space-y-4 print:p-0 print:max-w-none">
-          <div className="bg-[#111116] border border-[#2A2A35] rounded-xl p-6 sm:p-8 shadow-xl print:border-none print:bg-white print:text-black">
+          <div className="bg-[#101720] border border-[#25332F] rounded-xl p-6 sm:p-8 shadow-xl print:border-none print:bg-white print:text-black">
             {renderStructuredMarkdown()}
           </div>
         </div>

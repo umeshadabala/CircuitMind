@@ -14,19 +14,19 @@ export const ComponentNode: React.FC<{ data: ComponentNodeData }> = ({ data }) =
   const getCategoryColor = (category?: string) => {
     switch (category) {
       case 'microcontroller':
-        return 'border-[#7C3AED] bg-[#18181F]/90 text-[#A78BFA]';
+        return 'border-[#356B62] bg-[#151F2B]/95 text-[#5B9B8D]';
       case 'sensor':
-        return 'border-sky-500/60 bg-[#111116]/95 text-sky-400';
+        return 'border-sky-500/60 bg-[#101720]/95 text-sky-400';
       case 'actuator':
-        return 'border-amber-500/60 bg-[#111116]/95 text-amber-400';
+        return 'border-amber-500/60 bg-[#101720]/95 text-amber-400';
       case 'passive':
-        return 'border-zinc-500/60 bg-[#111116]/95 text-zinc-300';
+        return 'border-zinc-500/60 bg-[#101720]/95 text-zinc-300';
       case 'display':
-        return 'border-emerald-500/60 bg-[#111116]/95 text-emerald-400';
+        return 'border-emerald-500/60 bg-[#101720]/95 text-emerald-400';
       case 'logic':
-        return 'border-violet-500/60 bg-[#111116]/95 text-violet-300';
+        return 'border-teal-500/60 bg-[#101720]/95 text-teal-300';
       default:
-        return 'border-[#2A2A35] bg-[#111116] text-[#FAFAFA]';
+        return 'border-[#25332F] bg-[#101720] text-[#F1F5F4]';
     }
   };
 
@@ -36,18 +36,18 @@ export const ComponentNode: React.FC<{ data: ComponentNodeData }> = ({ data }) =
     <div
       className={`min-w-[190px] rounded-lg border shadow-xl transition-all font-mono text-xs ${getCategoryColor(
         catalogPart?.category
-      )} ${isSelected ? 'ring-2 ring-[#7C3AED] shadow-[#7C3AED]/30' : ''}`}
+      )} ${isSelected ? 'ring-2 ring-[#356B62] shadow-[#356B62]/30' : ''}`}
     >
       {/* Node Header */}
-      <div className="px-3 py-2 border-b border-[#2A2A35]/60 bg-[#111116]/80 flex items-center justify-between">
+      <div className="px-3 py-2 border-b border-[#25332F]/60 bg-[#101720]/80 flex items-center justify-between">
         <span className="font-bold text-sm tracking-wide text-white">{instance.instance_id}</span>
-        <span className="text-[10px] uppercase px-1.5 py-0.5 rounded bg-[#18181F] text-[#A1A1AA] border border-[#2A2A35]">
+        <span className="text-[10px] uppercase px-1.5 py-0.5 rounded bg-[#151F2B] text-[#96A6A3] border border-[#25332F]">
           {catalogPart?.category || 'module'}
         </span>
       </div>
 
       {/* Part description */}
-      <div className="px-3 py-1.5 text-[11px] font-sans text-[#A1A1AA] border-b border-[#2A2A35]/40 truncate">
+      <div className="px-3 py-1.5 text-[11px] font-sans text-[#96A6A3] border-b border-[#25332F]/40 truncate">
         {catalogPart?.name || instance.catalog_id}
       </div>
 
@@ -60,13 +60,13 @@ export const ComponentNode: React.FC<{ data: ComponentNodeData }> = ({ data }) =
           return (
             <div
               key={pin.pin_id}
-              className="relative px-3 py-1 flex items-center justify-between text-[11px] hover:bg-[#18181F]/70"
+              className="relative px-3 py-1 flex items-center justify-between text-[11px] hover:bg-[#151F2B]/70"
             >
               <Handle
                 type="target"
                 position={Position.Left}
                 id={`${pin.pin_id}-in`}
-                className="!bg-[#7C3AED] !w-2 !h-2"
+                className="!bg-[#356B62] !w-2 !h-2"
               />
 
               <div className="flex items-center space-x-1.5">
@@ -81,10 +81,10 @@ export const ComponentNode: React.FC<{ data: ComponentNodeData }> = ({ data }) =
                       : 'bg-emerald-400'
                   }`}
                 />
-                <span className="text-[#FAFAFA] font-mono">{pin.pin_id}</span>
+                <span className="text-[#F1F5F4] font-mono">{pin.pin_id}</span>
               </div>
 
-              <span className="text-[9px] text-[#A1A1AA] font-sans truncate max-w-[80px]">
+              <span className="text-[9px] text-[#96A6A3] font-sans truncate max-w-[80px]">
                 {pin.direction}
               </span>
 
@@ -92,7 +92,7 @@ export const ComponentNode: React.FC<{ data: ComponentNodeData }> = ({ data }) =
                 type="source"
                 position={Position.Right}
                 id={`${pin.pin_id}-out`}
-                className="!bg-[#7C3AED] !w-2 !h-2"
+                className="!bg-[#356B62] !w-2 !h-2"
               />
             </div>
           );

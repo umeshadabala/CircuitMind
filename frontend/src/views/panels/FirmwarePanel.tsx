@@ -20,14 +20,14 @@ export const FirmwarePanel: React.FC<FirmwarePanelProps> = ({ project }) => {
   const isStale = firmware && firmware.revision < project.revision;
 
   return (
-    <div className="h-full flex flex-col bg-[#09090B]">
+    <div className="h-full flex flex-col bg-[#090D12]">
       {/* Header */}
-      <div className="p-4 border-b border-[#2A2A35] bg-[#111116] flex items-center justify-between">
+      <div className="p-4 border-b border-[#25332F] bg-[#101720] flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <Code2 className="w-5 h-5 text-[#A78BFA]" />
+          <Code2 className="w-5 h-5 text-[#5B9B8D]" />
           <div>
             <h2 className="font-mono text-sm font-bold text-white">Generated Embedded Firmware</h2>
-            <div className="text-[11px] text-[#A1A1AA] font-mono flex items-center gap-2">
+            <div className="text-[11px] text-[#96A6A3] font-mono flex items-center gap-2">
               <span>Target: {project.target_board} (C++/Arduino)</span>
               <span>·</span>
               <span>Revision {firmware?.revision || 1}</span>
@@ -43,7 +43,7 @@ export const FirmwarePanel: React.FC<FirmwarePanelProps> = ({ project }) => {
         <div className="flex items-center space-x-3">
           <button
             onClick={handleCopy}
-            className="flex items-center space-x-1.5 bg-[#18181F] hover:bg-[#2A2A35] border border-[#2A2A35] text-[#FAFAFA] px-3 py-1 rounded text-xs font-mono transition-colors"
+            className="flex items-center space-x-1.5 bg-[#151F2B] hover:bg-[#25332F] border border-[#25332F] text-[#F1F5F4] px-3 py-1 rounded text-xs font-mono transition-colors"
           >
             {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
             <span>{copied ? 'Copied' : 'Copy Source'}</span>
@@ -52,7 +52,7 @@ export const FirmwarePanel: React.FC<FirmwarePanelProps> = ({ project }) => {
       </div>
 
       {/* Compiler / Toolchain Disclosure Alert */}
-      <div className="bg-[#111116] border-b border-[#2A2A35] px-4 py-2.5 flex items-start space-x-2.5 text-xs text-[#A1A1AA]">
+      <div className="bg-[#101720] border-b border-[#25332F] px-4 py-2.5 flex items-start space-x-2.5 text-xs text-[#96A6A3]">
         <Info className="w-4 h-4 text-sky-400 flex-shrink-0 mt-0.5" />
         <div>
           <span className="font-semibold text-zinc-200">Honest Build Status: </span>
@@ -65,12 +65,12 @@ export const FirmwarePanel: React.FC<FirmwarePanelProps> = ({ project }) => {
 
       {/* Code Editor view */}
       <div className="flex-1 overflow-auto p-4">
-        <div className="border border-[#2A2A35] rounded-lg overflow-hidden bg-[#111116] font-mono text-xs">
-          <div className="bg-[#18181F] px-4 py-2 border-b border-[#2A2A35] text-zinc-400 text-[11px] flex justify-between items-center">
+        <div className="border border-[#25332F] rounded-lg overflow-hidden bg-[#101720] font-mono text-xs">
+          <div className="bg-[#151F2B] px-4 py-2 border-b border-[#25332F] text-zinc-400 text-[11px] flex justify-between items-center">
             <span>firmware_main.ino</span>
             <span>{firmware?.source_code.split('\n').length || 0} lines</span>
           </div>
-          <pre className="p-4 text-[#FAFAFA] leading-relaxed overflow-x-auto selection:bg-[#7C3AED]">
+          <pre className="p-4 text-[#F1F5F4] leading-relaxed overflow-x-auto selection:bg-[#356B62]">
             {firmware?.source_code || '// No firmware generated for current project state.'}
           </pre>
         </div>

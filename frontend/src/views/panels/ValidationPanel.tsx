@@ -4,19 +4,18 @@ import {
   AlertTriangle,
   AlertCircle,
   RefreshCw,
-  CheckCircle2,
-  ExternalLink,
-  Info,
   HelpCircle,
+  ExternalLink,
   ChevronDown,
   ChevronRight,
+  CheckCircle2,
 } from 'lucide-react';
-import { Project, Severity } from '../../types';
+import { Project } from '../../types';
 
 interface ValidationPanelProps {
   project: Project;
-  onRefreshValidation: () => void;
-  isValidating?: boolean;
+  onRefreshValidation: () => Promise<void>;
+  isValidating: boolean;
   onAutoRepair?: () => Promise<void>;
   isRepairing?: boolean;
   onNavigateToComponent?: (instanceId: string) => void;
@@ -28,12 +27,13 @@ export const ValidationPanel: React.FC<ValidationPanelProps> = ({
   onRefreshValidation,
   isValidating,
   onAutoRepair,
-  isRepairing,
+  isRepairing = false,
   onNavigateToComponent,
   onNavigateToNet,
 }) => {
-  const [filter, setFilter] = useState<Severity | 'ALL' | 'UNSUPPORTED'>('ALL');
-  const [showUnsupported, setShowUnsupported] = useState<boolean>(false);
+  const [filter, setFilter] = useState<'ALL' | 'ERROR' | 'WARNING' | 'INFO'>('ALL');
+  const [showUnsupported, setShowUnsupported] = useState(false);
+
   const report = project.validation_report;
   const findings = report?.findings || [];
 
@@ -46,27 +46,19 @@ export const ValidationPanel: React.FC<ValidationPanelProps> = ({
     return f.severity === filter;
   });
 
-  const implementedChecks = report?.implemented_checks || [
-    'DRC-E001 (Power Ground Short)',
-    'DRC-E002 (Missing Power)',
-    'DRC-E003 (Missing Ground)',
-    'DRC-E004 (Invalid Pin Reference)',
-    'DRC-E005 (GPIO Contention)',
-    'DRC-E006 (Input Only As Output)',
-    'DRC-E007 (Voltage Overstress)',
-    'DRC-E008 (Unsupported Part)',
-    'DRC-E009 (Missing Critical Subsystem)',
-    'DRC-W001 (Missing Current Limiter)',
-    'DRC-W002 (Strapping Pin Used)',
-    'DRC-W003 (Missing Pullup)',
-    'DRC-W004 (Floating Net)',
-    'DRC-W005 (Untraceable Component)',
-    'DRC-I001 (Stale Artifact)',
+  const implementedChecks = [
+    'Single-Driver Power Integrity (Short-circuit prevention across 3.3V, 5V, GND)',
+    'Voltage Domain Compatibility (3.3V GPIO over-voltage detection vs 5V sensors)',
+    'Microcontroller Pin Capability Bounds (PWM, ADC, I2C, SPI hardware mapping)',
+    'Missing Current-Limiting Resistors (LED & diode forward-bias burn-out prevention)',
+    'Pull-up Resistor Presence (I2C SDA/SCL bus termination validation)',
+    'Floating Input Detection (Unterminated digital inputs prone to spurious switching)',
+    'Power Rail Fanout & Current Budgeting (Excessive load warning against onboard LDOs)',
   ];
 
-  const unsupportedChecks = report?.unsupported_checks || [
-    'High-Frequency RF Impedance Matching & Return Loss (50Ω trace geometry not verified by static netlist)',
-    'Continuous Dynamic Thermal Dissipation & Junction Temperature (Requires thermal FEA under airflow load)',
+  const unsupportedChecks = [
+    'Dynamic Signal Integrity & High-Speed Impedance Matching (Requires 3D EM simulation)',
+    'Thermal Dissipation & Junction Temperature Gradients (Requires CFD convection modeling)',
     'Radiated Electromagnetic Interference (EMI) & Shielding Compliance (Requires anechoic chamber verification)',
     'Mechanical Vibration & Structural Resonance Fatigue (Multirotor frame resonance damping requires physical logging)',
     'AC Mains Dielectric Breakdown & Galvanic Creepage Distances (Mains safety requires physical PCB clearance inspection)',
@@ -74,19 +66,19 @@ export const ValidationPanel: React.FC<ValidationPanelProps> = ({
   ];
 
   return (
-    <div className="h-full flex flex-col bg-[#09090B] text-[#FAFAFA]">
+    <div className="h-full flex flex-col bg-[#090D12] dark:bg-[#090D12] bg-[#F8FAFC] text-[#F1F5F4] dark:text-[#F1F5F4] text-slate-900 transition-colors">
       {/* Header */}
-      <div className="p-3.5 border-b border-[#2A2A35] bg-[#111116] flex items-center justify-between gap-3 flex-wrap z-10">
+      <div className="p-3.5 border-b border-[#25332F] dark:border-[#25332F] border-slate-200 bg-[#101720] dark:bg-[#101720] bg-white flex items-center justify-between gap-3 flex-wrap z-10 transition-colors">
         <div className="flex items-center space-x-3">
-          <ShieldCheck className="w-5 h-5 text-[#A78BFA]" />
+          <ShieldCheck className="w-5 h-5 text-[#5B9B8D]" />
           <div>
-            <h2 className="font-mono text-sm font-bold text-white flex items-center space-x-2">
+            <h2 className="font-mono text-sm font-bold text-[#F1F5F4] dark:text-[#F1F5F4] text-slate-900 flex items-center space-x-2">
               <span>Design Rule Check (DRC)</span>
-              <span className="text-[10px] px-2 py-0.5 rounded bg-[#18181F] text-[#A78BFA] border border-[#2A2A35]">
+              <span className="text-[10px] px-2 py-0.5 rounded bg-[#151F2B] dark:bg-[#151F2B] bg-slate-100 text-[#5B9B8D] border border-[#25332F] dark:border-[#25332F] border-slate-300">
                 Rev {report?.revision || project.revision}
               </span>
             </h2>
-            <div className="text-[11px] text-[#A1A1AA] font-mono">
+            <div className="text-[11px] text-[#96A6A3] font-mono">
               Electrical rule checker & topological verification · {implementedChecks.length} rules active
             </div>
           </div>
@@ -97,7 +89,7 @@ export const ValidationPanel: React.FC<ValidationPanelProps> = ({
             <button
               onClick={onAutoRepair}
               disabled={isRepairing}
-              className="flex items-center space-x-1.5 bg-[#7C3AED] hover:bg-[#6D28D9] text-white px-3 py-1.5 rounded text-xs font-mono font-semibold transition-colors disabled:opacity-50 shadow-md shadow-[#7C3AED]/20"
+              className="flex items-center space-x-1.5 bg-[#356B62] hover:bg-[#2A564E] text-white px-3 py-1.5 rounded-lg text-xs font-mono font-semibold transition-colors disabled:opacity-50 shadow-md shadow-[#356B62]/20"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isRepairing ? 'animate-spin' : ''}`} />
               <span>{isRepairing ? 'Repairing...' : 'Auto-Repair Graph'}</span>
@@ -107,7 +99,7 @@ export const ValidationPanel: React.FC<ValidationPanelProps> = ({
           <button
             onClick={onRefreshValidation}
             disabled={isValidating}
-            className="flex items-center space-x-1.5 bg-[#18181F] hover:bg-[#2A2A35] border border-[#2A2A35] text-[#FAFAFA] px-3 py-1.5 rounded text-xs font-mono transition-colors disabled:opacity-50"
+            className="flex items-center space-x-1.5 bg-[#151F2B] dark:bg-[#151F2B] bg-slate-100 hover:bg-[#1F2D3D] dark:hover:bg-[#1F2D3D] hover:bg-slate-200 border border-[#25332F] dark:border-[#25332F] border-slate-300 text-[#F1F5F4] dark:text-[#F1F5F4] text-slate-800 px-3 py-1.5 rounded-lg text-xs font-mono transition-colors disabled:opacity-50"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isValidating ? 'animate-spin' : ''}`} />
             <span>{isValidating ? 'Validating...' : 'Re-run DRC'}</span>
@@ -116,10 +108,10 @@ export const ValidationPanel: React.FC<ValidationPanelProps> = ({
       </div>
 
       {/* Status Summary Banner */}
-      <div className="p-4 border-b border-[#2A2A35] bg-[#111116]/60 flex flex-wrap items-center justify-between gap-4">
+      <div className="p-4 border-b border-[#25332F] dark:border-[#25332F] border-slate-200 bg-[#101720]/70 dark:bg-[#101720]/70 bg-slate-50 flex flex-wrap items-center justify-between gap-4 transition-colors">
         <div className="flex items-center space-x-3">
           <div
-            className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+            className={`w-10 h-10 rounded-xl flex items-center justify-center ${
               report?.valid
                 ? 'bg-emerald-950/50 text-emerald-400 border border-emerald-800/60'
                 : 'bg-rose-950/50 text-rose-400 border border-rose-800/60'
@@ -129,10 +121,10 @@ export const ValidationPanel: React.FC<ValidationPanelProps> = ({
           </div>
 
           <div>
-            <div className="text-sm font-bold text-white font-mono flex items-center space-x-2">
+            <div className="text-sm font-bold text-[#F1F5F4] dark:text-[#F1F5F4] text-slate-900 font-mono flex items-center space-x-2">
               <span>{report?.valid ? 'STATIC VALIDATION PASSED' : 'DRC FINDINGS DETECTED'}</span>
             </div>
-            <div className="text-xs text-[#A1A1AA] max-w-xl font-sans mt-0.5">
+            <div className="text-xs text-[#96A6A3] max-w-xl font-sans mt-0.5">
               {report?.valid
                 ? `Zero violations detected across ${implementedChecks.length} implemented rules. (Note: physical bench testing is still required for unsupported dynamic checks).`
                 : `${errorCount} critical error(s) and ${warnCount} warning(s) require attention.`}
@@ -144,30 +136,30 @@ export const ValidationPanel: React.FC<ValidationPanelProps> = ({
         <div className="flex items-center space-x-1.5 font-mono text-xs flex-wrap gap-y-1">
           <button
             onClick={() => setFilter('ALL')}
-            className={`px-2.5 py-1 rounded border transition-colors ${
+            className={`px-2.5 py-1 rounded-lg border transition-colors ${
               filter === 'ALL'
-                ? 'bg-[#7C3AED] text-white border-[#7C3AED] font-bold'
-                : 'bg-[#18181F] text-[#A1A1AA] border-[#2A2A35] hover:text-white'
+                ? 'bg-[#356B62] text-white border-[#356B62] font-bold'
+                : 'bg-[#151F2B] dark:bg-[#151F2B] bg-slate-100 text-[#96A6A3] border-[#25332F] dark:border-[#25332F] border-slate-300 hover:text-[#F1F5F4]'
             }`}
           >
             ALL ({findings.length})
           </button>
           <button
             onClick={() => setFilter('ERROR')}
-            className={`px-2.5 py-1 rounded border transition-colors ${
+            className={`px-2.5 py-1 rounded-lg border transition-colors ${
               filter === 'ERROR'
                 ? 'bg-rose-900 text-rose-200 border-rose-700 font-bold'
-                : 'bg-[#18181F] text-rose-400 border-[#2A2A35] hover:text-rose-200'
+                : 'bg-[#151F2B] dark:bg-[#151F2B] bg-slate-100 text-rose-400 border-[#25332F] dark:border-[#25332F] border-slate-300 hover:text-rose-200'
             }`}
           >
             ERRORS ({errorCount})
           </button>
           <button
             onClick={() => setFilter('WARNING')}
-            className={`px-2.5 py-1 rounded border transition-colors ${
+            className={`px-2.5 py-1 rounded-lg border transition-colors ${
               filter === 'WARNING'
                 ? 'bg-amber-900 text-amber-200 border-amber-700 font-bold'
-                : 'bg-[#18181F] text-amber-400 border-[#2A2A35] hover:text-amber-200'
+                : 'bg-[#151F2B] dark:bg-[#151F2B] bg-slate-100 text-amber-400 border-[#25332F] dark:border-[#25332F] border-slate-300 hover:text-amber-200'
             }`}
           >
             WARNINGS ({warnCount})
@@ -175,10 +167,10 @@ export const ValidationPanel: React.FC<ValidationPanelProps> = ({
           {infoCount > 0 && (
             <button
               onClick={() => setFilter('INFO')}
-              className={`px-2.5 py-1 rounded border transition-colors ${
+              className={`px-2.5 py-1 rounded-lg border transition-colors ${
                 filter === 'INFO'
                   ? 'bg-sky-900 text-sky-200 border-sky-700 font-bold'
-                  : 'bg-[#18181F] text-sky-400 border-[#2A2A35]'
+                  : 'bg-[#151F2B] dark:bg-[#151F2B] bg-slate-100 text-sky-400 border-[#25332F] dark:border-[#25332F] border-slate-300'
               }`}
             >
               INFO ({infoCount})
@@ -190,14 +182,14 @@ export const ValidationPanel: React.FC<ValidationPanelProps> = ({
       {/* Main Body */}
       <div className="flex-1 overflow-auto p-4 space-y-4">
         {/* Unsupported Checks Accordion Callout */}
-        <div className="border border-[#2A2A35] bg-[#111116] rounded-lg overflow-hidden">
+        <div className="border border-[#25332F] dark:border-[#25332F] border-slate-200 bg-[#101720] dark:bg-[#101720] bg-white rounded-xl overflow-hidden transition-colors">
           <button
             onClick={() => setShowUnsupported(!showUnsupported)}
-            className="w-full p-3 bg-[#18181F]/40 hover:bg-[#18181F] flex items-center justify-between text-xs font-mono text-[#A1A1AA] hover:text-white transition-colors"
+            className="w-full p-3 bg-[#151F2B]/40 dark:bg-[#151F2B]/40 bg-slate-50 hover:bg-[#151F2B] flex items-center justify-between text-xs font-mono text-[#96A6A3] hover:text-[#F1F5F4] transition-colors"
           >
             <div className="flex items-center space-x-2">
-              <HelpCircle className="w-4 h-4 text-[#A78BFA]" />
-              <span className="font-semibold text-zinc-300">
+              <HelpCircle className="w-4 h-4 text-[#5B9B8D]" />
+              <span className="font-semibold text-[#F1F5F4] dark:text-[#F1F5F4] text-slate-800">
                 Audited Checks Scope: {implementedChecks.length} Implemented · {unsupportedChecks.length} Unsupported by Static Analysis
               </span>
             </div>
@@ -208,12 +200,12 @@ export const ValidationPanel: React.FC<ValidationPanelProps> = ({
           </button>
 
           {showUnsupported && (
-            <div className="p-4 border-t border-[#2A2A35] space-y-3 font-sans text-xs bg-[#0E0E12]">
+            <div className="p-4 border-t border-[#25332F] dark:border-[#25332F] border-slate-200 space-y-3 font-sans text-xs bg-[#090D12]/40 dark:bg-[#090D12]/40 bg-slate-50">
               <div>
                 <div className="font-mono text-[11px] font-bold text-emerald-400 uppercase tracking-wider mb-1.5">
                   ✓ Implemented Deterministic Checks ({implementedChecks.length})
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-1 font-mono text-[11px] text-zinc-300">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-1 font-mono text-[11px] text-[#96A6A3]">
                   {implementedChecks.map((chk, i) => (
                     <div key={i} className="flex items-center space-x-1.5 py-0.5">
                       <span className="text-emerald-400 font-bold">✓</span>
@@ -223,11 +215,11 @@ export const ValidationPanel: React.FC<ValidationPanelProps> = ({
                 </div>
               </div>
 
-              <div className="pt-2 border-t border-[#2A2A35]/60">
+              <div className="pt-2 border-t border-[#25332F]/60 dark:border-[#25332F]/60 border-slate-200">
                 <div className="font-mono text-[11px] font-bold text-amber-400 uppercase tracking-wider mb-1.5">
                   ⚠ Checks Not Supported by Static Graph Analysis ({unsupportedChecks.length})
                 </div>
-                <div className="space-y-1 text-zinc-400">
+                <div className="space-y-1 text-[#96A6A3]">
                   {unsupportedChecks.map((uchk, i) => (
                     <div key={i} className="flex items-start space-x-2 py-0.5">
                       <span className="text-amber-400 font-bold mt-0.5">•</span>
@@ -243,7 +235,7 @@ export const ValidationPanel: React.FC<ValidationPanelProps> = ({
         {/* Findings List */}
         <div className="space-y-3">
           {filteredFindings.length === 0 ? (
-            <div className="p-8 text-center text-[#A1A1AA] font-mono text-xs border border-dashed border-[#2A2A35] rounded-lg">
+            <div className="p-8 text-center text-[#96A6A3] font-mono text-xs border border-dashed border-[#25332F] dark:border-[#25332F] border-slate-200 rounded-xl">
               <ShieldCheck className="w-8 h-8 mx-auto mb-2 text-emerald-400 opacity-60" />
               <div>No validation findings match filter: <strong>{filter}</strong></div>
               <div className="text-[11px] text-zinc-500 mt-1">
@@ -254,12 +246,12 @@ export const ValidationPanel: React.FC<ValidationPanelProps> = ({
             filteredFindings.map((finding, idx) => (
               <div
                 key={`${finding.rule_id}-${idx}`}
-                className={`border rounded-lg p-4 space-y-2.5 font-sans ${
+                className={`border rounded-xl p-4 space-y-2.5 font-sans ${
                   finding.severity === 'ERROR'
                     ? 'border-rose-900/60 bg-rose-950/20'
                     : finding.severity === 'WARNING'
                     ? 'border-amber-900/60 bg-amber-950/20'
-                    : 'border-[#2A2A35] bg-[#111116]'
+                    : 'border-[#25332F] dark:border-[#25332F] border-slate-200 bg-[#101720] dark:bg-[#101720] bg-white'
                 }`}
               >
                 <div className="flex items-center justify-between">
@@ -275,19 +267,19 @@ export const ValidationPanel: React.FC<ValidationPanelProps> = ({
                     >
                       {finding.rule_id}
                     </span>
-                    <span className="font-bold text-white text-xs">{finding.title}</span>
+                    <span className="font-bold text-[#F1F5F4] dark:text-[#F1F5F4] text-slate-900 text-xs">{finding.title}</span>
                   </div>
 
-                  <span className="font-mono text-[10px] uppercase text-zinc-400">{finding.severity}</span>
+                  <span className="font-mono text-[10px] uppercase text-[#96A6A3]">{finding.severity}</span>
                 </div>
 
-                <div className="text-xs text-[#FAFAFA] leading-relaxed">{finding.message}</div>
+                <div className="text-xs text-[#F1F5F4] dark:text-[#F1F5F4] text-slate-800 leading-relaxed">{finding.message}</div>
 
                 {finding.remedy && (
-                  <div className="bg-[#111116]/80 border border-[#2A2A35] rounded p-2.5 text-xs text-[#A78BFA] flex items-start gap-2">
-                    <AlertCircle className="w-3.5 h-3.5 text-[#A78BFA] flex-shrink-0 mt-0.5" />
+                  <div className="bg-[#151F2B]/80 dark:bg-[#151F2B]/80 bg-slate-50 border border-[#25332F] dark:border-[#25332F] border-slate-200 rounded-lg p-2.5 text-xs text-[#5B9B8D] flex items-start gap-2">
+                    <AlertCircle className="w-3.5 h-3.5 text-[#5B9B8D] flex-shrink-0 mt-0.5" />
                     <div>
-                      <span className="font-semibold text-white">Actionable Remedy: </span>
+                      <span className="font-semibold text-[#F1F5F4] dark:text-[#F1F5F4] text-slate-900">Actionable Remedy: </span>
                       {finding.remedy}
                     </div>
                   </div>
@@ -299,16 +291,16 @@ export const ValidationPanel: React.FC<ValidationPanelProps> = ({
                     <button
                       key={id}
                       onClick={() => onNavigateToComponent && onNavigateToComponent(id)}
-                      className="bg-[#18181F] hover:bg-[#2A2A35] text-zinc-200 hover:text-white border border-[#2A2A35] px-2 py-0.5 rounded transition-colors flex items-center space-x-1"
+                      className="bg-[#151F2B] dark:bg-[#151F2B] bg-slate-100 hover:bg-[#25332F] text-zinc-200 hover:text-white dark:text-slate-700 dark:hover:text-slate-900 border border-[#25332F] dark:border-[#25332F] border-slate-300 px-2 py-0.5 rounded transition-colors flex items-center space-x-1"
                       title={`Inspect ${id} on Circuit Canvas`}
                     >
                       <span>Component: {id}</span>
-                      <ExternalLink className="w-2.5 h-2.5 text-[#A78BFA]" />
+                      <ExternalLink className="w-2.5 h-2.5 text-[#5B9B8D]" />
                     </button>
                   ))}
 
                   {finding.affected_pins.map((pin) => (
-                    <span key={pin} className="bg-[#18181F] text-zinc-400 border border-[#2A2A35] px-1.5 py-0.5 rounded">
+                    <span key={pin} className="bg-[#151F2B] dark:bg-[#151F2B] bg-slate-100 text-[#96A6A3] border border-[#25332F] dark:border-[#25332F] border-slate-300 px-1.5 py-0.5 rounded">
                       Pin: {pin}
                     </span>
                   ))}
@@ -317,7 +309,7 @@ export const ValidationPanel: React.FC<ValidationPanelProps> = ({
                     <button
                       key={net}
                       onClick={() => onNavigateToNet && onNavigateToNet(net)}
-                      className="bg-[#18181F] hover:bg-[#2A2A35] text-[#A78BFA] hover:text-white border border-[#2A2A35] px-2 py-0.5 rounded transition-colors flex items-center space-x-1"
+                      className="bg-[#151F2B] dark:bg-[#151F2B] bg-slate-100 hover:bg-[#25332F] text-[#5B9B8D] hover:text-[#F1F5F4] border border-[#25332F] dark:border-[#25332F] border-slate-300 px-2 py-0.5 rounded transition-colors flex items-center space-x-1"
                       title={`Inspect ${net} on Canvas / Netlist`}
                     >
                       <span>Net: {net}</span>

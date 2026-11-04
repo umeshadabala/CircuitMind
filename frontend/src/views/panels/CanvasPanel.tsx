@@ -82,7 +82,7 @@ const CanvasInner: React.FC<CanvasPanelProps> = ({
       for (let i = 1; i < net.pins.length; i++) {
         const targetPin = net.pins[i];
 
-        let strokeColor = '#7C3AED';
+        let strokeColor = '#356B62';
         if (net.net_type === 'POWER') strokeColor = '#EF4444';
         else if (net.net_type === 'GROUND') strokeColor = '#71717A';
         else if (net.net_type === 'I2C') strokeColor = '#38BDF8';
@@ -99,13 +99,13 @@ const CanvasInner: React.FC<CanvasPanelProps> = ({
           type: 'smoothstep',
           animated: isHighlighted || net.net_type === 'SIGNAL' || net.net_type === 'I2C',
           style: {
-            stroke: isHighlighted ? '#A78BFA' : strokeColor,
+            stroke: isHighlighted ? '#5B9B8D' : strokeColor,
             strokeWidth: isHighlighted ? 3.5 : 2,
-            filter: isHighlighted ? 'drop-shadow(0 0 8px rgba(167, 139, 250, 0.8))' : undefined,
+            filter: isHighlighted ? 'drop-shadow(0 0 8px rgba(91, 155, 141, 0.8))' : undefined,
           },
           label: net.name,
-          labelStyle: { fill: isHighlighted ? '#FAFAFA' : '#A1A1AA', fontSize: 10, fontFamily: 'monospace' },
-          labelBgStyle: { fill: '#111116', fillOpacity: 0.85 },
+          labelStyle: { fill: isHighlighted ? '#F1F5F4' : '#96A6A3', fontSize: 10, fontFamily: 'monospace' },
+          labelBgStyle: { fill: '#101720', fillOpacity: 0.85 },
         });
       }
     });
@@ -152,7 +152,7 @@ const CanvasInner: React.FC<CanvasPanelProps> = ({
   };
 
   return (
-    <div className="w-full h-full relative bg-[#09090B]">
+    <div className="w-full h-full relative bg-[#090D12]">
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -174,47 +174,47 @@ const CanvasInner: React.FC<CanvasPanelProps> = ({
         maxZoom={2.2}
         fitView
       >
-        <Background color="#2A2A35" gap={24} size={1} />
+        <Background color="#25332F" gap={24} size={1} />
         <MiniMap
-          nodeColor="#7C3AED"
-          maskColor="rgba(9, 9, 11, 0.75)"
-          className="!bg-[#111116] !border-[#2A2A35]"
+          nodeColor="#356B62"
+          maskColor="rgba(9, 13, 18, 0.75)"
+          className="!bg-[#101720] !border-[#25332F]"
         />
       </ReactFlow>
 
       {/* Top Floating Control Bar */}
-      <div className="absolute top-4 right-4 bg-[#111116]/90 backdrop-blur border border-[#2A2A35] p-1.5 rounded-lg flex items-center space-x-1.5 z-10 shadow-lg text-xs font-mono">
+      <div className="absolute top-4 right-4 bg-[#101720]/90 backdrop-blur border border-[#25332F] p-1.5 rounded-lg flex items-center space-x-1.5 z-10 shadow-lg text-xs font-mono">
         <button
           onClick={handleAutoLayout}
           disabled={isLayingOut}
           title="Auto-arrange components neatly without changing wiring"
-          className="flex items-center space-x-1 bg-[#18181F] hover:bg-[#2A2A35] text-[#A78BFA] px-2.5 py-1 rounded border border-[#7C3AED]/40 transition-colors disabled:opacity-50"
+          className="flex items-center space-x-1 bg-[#151F2B] hover:bg-[#25332F] text-[#5B9B8D] px-2.5 py-1 rounded border border-[#356B62]/40 transition-colors disabled:opacity-50"
         >
           <LayoutGrid className="w-3.5 h-3.5" />
           <span>Auto Layout</span>
         </button>
 
-        <div className="h-4 w-px bg-[#2A2A35]" />
+        <div className="h-4 w-px bg-[#25332F]" />
 
         <button
           onClick={() => {
             zoomIn({ duration: 300 });
             setTimeout(() => setZoomLevel(Math.round(getZoom() * 100)), 350);
           }}
-          className="p-1.5 text-zinc-300 hover:text-white rounded hover:bg-[#18181F] transition-colors"
+          className="p-1.5 text-zinc-300 hover:text-white rounded hover:bg-[#151F2B] transition-colors"
           title="Zoom In"
         >
           <ZoomIn className="w-3.5 h-3.5" />
         </button>
 
-        <span className="text-[11px] text-zinc-400 w-10 text-center font-bold">{zoomLevel}%</span>
+        <span className="text-[11px] text-[#96A6A3] w-10 text-center font-bold">{zoomLevel}%</span>
 
         <button
           onClick={() => {
             zoomOut({ duration: 300 });
             setTimeout(() => setZoomLevel(Math.round(getZoom() * 100)), 350);
           }}
-          className="p-1.5 text-zinc-300 hover:text-white rounded hover:bg-[#18181F] transition-colors"
+          className="p-1.5 text-zinc-300 hover:text-white rounded hover:bg-[#151F2B] transition-colors"
           title="Zoom Out"
         >
           <ZoomOut className="w-3.5 h-3.5" />
@@ -222,7 +222,7 @@ const CanvasInner: React.FC<CanvasPanelProps> = ({
 
         <button
           onClick={() => fitView({ padding: 0.2, duration: 400 })}
-          className="p-1.5 text-zinc-300 hover:text-white rounded hover:bg-[#18181F] transition-colors"
+          className="p-1.5 text-zinc-300 hover:text-white rounded hover:bg-[#151F2B] transition-colors"
           title="Fit view to all components"
         >
           <Maximize2 className="w-3.5 h-3.5" />
@@ -230,22 +230,22 @@ const CanvasInner: React.FC<CanvasPanelProps> = ({
       </div>
 
       {/* Floating Canvas Legend */}
-      <div className="absolute bottom-4 left-4 bg-[#111116]/90 backdrop-blur border border-[#2A2A35] p-2.5 rounded-lg text-[11px] font-mono flex items-center space-x-4 pointer-events-none z-10 shadow-lg">
+      <div className="absolute bottom-4 left-4 bg-[#101720]/90 backdrop-blur border border-[#25332F] p-2.5 rounded-lg text-[11px] font-mono flex items-center space-x-4 pointer-events-none z-10 shadow-lg">
         <div className="flex items-center space-x-1.5">
           <span className="w-2.5 h-0.5 bg-rose-500 inline-block" />
-          <span className="text-[#A1A1AA]">Power (3.3V/5V)</span>
+          <span className="text-[#96A6A3]">Power (3.3V/5V)</span>
         </div>
         <div className="flex items-center space-x-1.5">
           <span className="w-2.5 h-0.5 bg-zinc-500 inline-block" />
-          <span className="text-[#A1A1AA]">Ground (GND)</span>
+          <span className="text-[#96A6A3]">Ground (GND)</span>
         </div>
         <div className="flex items-center space-x-1.5">
-          <span className="w-2.5 h-0.5 bg-[#7C3AED] inline-block" />
-          <span className="text-[#A1A1AA]">Logic Signal</span>
+          <span className="w-2.5 h-0.5 bg-[#356B62] inline-block" />
+          <span className="text-[#96A6A3]">Logic Signal</span>
         </div>
         <div className="flex items-center space-x-1.5">
           <span className="w-2.5 h-0.5 bg-sky-400 inline-block" />
-          <span className="text-[#A1A1AA]">I2C Bus</span>
+          <span className="text-[#96A6A3]">I2C Bus</span>
         </div>
       </div>
     </div>

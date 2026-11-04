@@ -5,24 +5,34 @@ export default {
   theme: {
     extend: {
       colors: {
+        eng: {
+          bg: '#090D12',
+          surface: '#101720',
+          elevated: '#151F2B',
+          accent: '#356B62',
+          'accent-light': '#5B9B8D',
+          border: '#25332F',
+          'border-subtle': '#1B2623',
+          text: '#F1F5F4',
+          muted: '#96A6A3',
+        },
         brand: {
-          primary: '#7C3AED',
-          hover: '#6D28D9',
-          highlight: '#A78BFA',
-          bg: '#09090B',
-          surface: '#111116',
-          elevated: '#18181F',
-          border: '#2A2A35',
-          text: '#FAFAFA',
-          muted: '#A1A1AA',
+          primary: '#356B62',
+          hover: '#2D5E56',
+          highlight: '#5B9B8D',
+          bg: '#090D12',
+          surface: '#101720',
+          elevated: '#151F2B',
+          border: '#25332F',
+          text: '#F1F5F4',
+          muted: '#96A6A3',
         },
       },
       fontFamily: {
         mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
       },
     },
   },
   plugins: [],
 };
-
