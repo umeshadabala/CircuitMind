@@ -1,0 +1,26 @@
+{
+  "name": "circuitmind",
+  "version": "1.0.0",
+  "description": "CircuitMind — AI-assisted electronics engineering workspace",
+  "private": true,
+  "scripts": {
+    "dev": "bash scripts/dev.sh",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev:backend": "bash scripts/dev-backend.sh",
+    "build": "npm run build --prefix frontend",
+    "test:frontend": "npm run test --prefix frontend",
+    "test:backend": "bash scripts/test-backend.sh",
+    "check": "bash scripts/verify.sh",
+    "setup": "bash scripts/setup.sh"
+  },
+  "keywords": [
+    "electronics",
+    "esp32",
+    "hardware-design",
+    "circuit",
+    "drc",
+    "eda"
+  ],
+  "author": "CircuitMind Architecture Team",
+  "license": "Apache-2.0"
+}

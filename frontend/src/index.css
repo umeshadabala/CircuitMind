@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-primary: #09090B;
+  --bg-surface: #111116;
+  --bg-elevated: #18181F;
+  --border-color: #2A2A35;
+  --accent-violet: #7C3AED;
+  --accent-highlight: #A78BFA;
+  --text-main: #FAFAFA;
+  --text-muted: #A1A1AA;
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg-primary);
+  color: var(--text-main);
+  background-image: 
+    radial-gradient(circle at 50% 0%, rgba(124, 58, 237, 0.08) 0%, transparent 60%),
+    linear-gradient(to right, rgba(42, 42, 53, 0.15) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(42, 42, 53, 0.15) 1px, transparent 1px);
+  background-size: 100% 100%, 24px 24px, 24px 24px;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #111116;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2A2A35;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #7C3AED;
+}
+
+/* React Flow styling overrides */
+.react-flow__background {
+  background-color: #0d0d12 !important;
+}
+
+.react-flow__node {
+  border-radius: 8px;
+}
+
+.react-flow__handle {
+  width: 8px;
+  height: 8px;
+  border-radius: 4px;
+  background-color: #7C3AED;
+  border: 2px solid #111116;
+}
+
